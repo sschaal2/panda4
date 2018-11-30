@@ -1,0 +1,180 @@
+(* Content-type: application/mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 6.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       145,          7]
+NotebookDataLength[      6668,        172]
+NotebookOptionsPosition[      4863,        137]
+NotebookOutlinePosition[      5597,        162]
+CellTagsIndexPosition[      5554,        159]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"SetDirectory", "[", "\"\</Users/sschaal/Google Drive\>\"", "]"}], 
+  ";"}]], "Input",
+ CellChangeTimes->{{3.752430306553233*^9, 3.7524303324808683`*^9}},
+ CellLabel->"In[6]:=",ExpressionUUID->"7b7e2d87-889d-4fe6-bc7e-5a8ea20e8f59"],
+
+Cell[BoxData[
+ RowBox[{"<<", "RigidBodyDynamics.m"}]], "Input",
+ AspectRatioFixed->
+  True,ExpressionUUID->"221cf60a-300f-4feb-a929-5c989f66b2c8"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"SetDirectory", "[", "\"\<panda\>\"", "]"}], ";"}]], "Input",
+ CellChangeTimes->{3.5483665769714537`*^9, 
+  3.752430406879511*^9},ExpressionUUID->"97dbb0a3-8ab7-4f1b-a2f6-\
+a4dcbaecd951"],
+
+Cell[BoxData[
+ RowBox[{"InvDynNE", "[", 
+  RowBox[{"\"\<panda.dyn\>\"", ",", "\"\<panda\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", 
+     RowBox[{"-", "gravity"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.494468409706417*^9, 3.4944684098074217`*^9}, {
+  3.548366577007745*^9, 3.5483665770361843`*^9}, {3.752430406883079*^9, 
+  3.752430406886106*^9}},
+ AspectRatioFixed->
+  True,ExpressionUUID->"978c7bce-fd15-4b52-b1b9-4a94f16680d9"],
+
+Cell[BoxData[
+ RowBox[{"InvDynArt", "[", 
+  RowBox[{"\"\<panda.dyn\>\"", ",", "\"\<panda\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", 
+     RowBox[{"-", "gravity"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.5483665770706882`*^9, 3.548366577105336*^9}, {
+  3.752430406889471*^9, 
+  3.752430406892706*^9}},ExpressionUUID->"6efe946a-3210-4e31-b08e-\
+bf3afb74f640"],
+
+Cell[BoxData[
+ RowBox[{"ParmEst", "[", 
+  RowBox[{"\"\<panda.dyn\>\"", ",", "\"\<panda\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", 
+     RowBox[{"-", "gravity"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.5483665771368713`*^9, 3.548366577172202*^9}, {
+  3.7524304068958683`*^9, 
+  3.75243040689884*^9}},ExpressionUUID->"e171117f-96af-4db6-b16c-\
+09a858a068fc"],
+
+Cell[BoxData[
+ RowBox[{"ForDynArt", "[", 
+  RowBox[{"\"\<panda.dyn\>\"", ",", "\"\<panda\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", 
+     RowBox[{"-", "gravity"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.4944684175517683`*^9, 3.494468417959557*^9}, {
+  3.5483665772082567`*^9, 3.548366577235998*^9}, {3.752430406901874*^9, 
+  3.752430406904644*^9}},
+ AspectRatioFixed->
+  True,ExpressionUUID->"302188e8-c65f-4d5f-b6ed-3694ae0ebbe3"],
+
+Cell[BoxData[
+ RowBox[{"ForDynComp", "[", 
+  RowBox[{"\"\<panda.dyn\>\"", ",", "\"\<panda\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", 
+     RowBox[{"-", "gravity"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.548366577270249*^9, 3.54836657730694*^9}, {
+  3.752430406907464*^9, 3.752430406910068*^9}},
+ AspectRatioFixed->
+  True,ExpressionUUID->"999c7ed3-8874-445d-b22a-d52c0535526b"],
+
+Cell[BoxData[
+ RowBox[{"LinkEndpointKinematics", "[", 
+  RowBox[{"\"\<panda.dyn\>\"", ",", "\"\<panda\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.548366577336236*^9, 3.548366577372787*^9}, {
+  3.752430406912895*^9, 3.752430406915333*^9}},
+ AspectRatioFixed->
+  True,ExpressionUUID->"ea18a5ec-eb96-46ac-82e7-4318596ee8a2"],
+
+Cell[BoxData[
+ RowBox[{"OpenGLKinematics", "[", 
+  RowBox[{"\"\<panda.dyn\>\"", ",", "\"\<panda\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.5483665774042683`*^9, 3.548366577436838*^9}, {
+  3.7524304069180393`*^9, 
+  3.752430406920609*^9}},ExpressionUUID->"b0e43a9a-0f74-4ad8-926a-\
+a3d1c79da289"],
+
+Cell[BoxData[
+ RowBox[{"GeometricJacobian", "[", 
+  RowBox[{"\"\<panda.dyn\>\"", ",", 
+   RowBox[{"{", "108", "}"}], ",", "\"\<panda\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.548366577472628*^9, 3.5483665775030727`*^9}, {
+  3.75243040692339*^9, 
+  3.752430406925947*^9}},ExpressionUUID->"0a9c8675-dc38-49af-ab4b-\
+dce580a059df"],
+
+Cell[BoxData[
+ RowBox[{"InertiaMatrix", "[", 
+  RowBox[{"\"\<panda.dyn\>\"", ",", "\"\<panda\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.548366577539706*^9, 3.548366577570058*^9}, {
+  3.752430406928534*^9, 
+  3.752430406930884*^9}},ExpressionUUID->"913309de-5793-46ab-af8e-\
+fbd383c2aa97"],
+
+Cell[BoxData[
+ RowBox[{"LinkInformation", "[", 
+  RowBox[{"\"\<panda.dyn\>\"", ",", "\"\<panda\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.5483665776069727`*^9, 3.5483665776398697`*^9}, {
+  3.752430406933313*^9, 
+  3.7524304069356203`*^9}},ExpressionUUID->"338e92ea-0e27-4e9e-bc9a-\
+c36a5aaeb5c7"]
+},
+WindowToolbars->{},
+CellGrouping->Automatic,
+WindowSize->{820, 586},
+WindowMargins->{{466, Automatic}, {Automatic, 163}},
+PrivateNotebookOptions->{"VersionedStylesheet"->{"Default.nb"[8.] -> False}},
+ShowCellLabel->True,
+ShowCellTags->False,
+FrontEndVersion->"11.3 for Mac OS X x86 (32-bit, 64-bit Kernel) (March 5, \
+2018)",
+StyleDefinitions->"Default.nb",
+PrivateNotebookOptions -> {"ColorPalette" -> {RGBColor, 128}},
+RenderingOptions -> {"ObjectDithering" -> True},
+RenderingOptions -> {"RasterDithering" -> False},
+CharacterEncoding -> "MacintoshAutomaticEncoding"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[545, 20, 266, 5, 30, "Input",ExpressionUUID->"7b7e2d87-889d-4fe6-bc7e-5a8ea20e8f59"],
+Cell[814, 27, 146, 3, 30, "Input",ExpressionUUID->"221cf60a-300f-4feb-a929-5c989f66b2c8"],
+Cell[963, 32, 221, 5, 30, "Input",ExpressionUUID->"97dbb0a3-8ab7-4f1b-a2f6-a4dcbaecd951"],
+Cell[1187, 39, 459, 10, 30, "Input",ExpressionUUID->"978c7bce-fd15-4b52-b1b9-4a94f16680d9"],
+Cell[1649, 51, 386, 9, 30, "Input",ExpressionUUID->"6efe946a-3210-4e31-b08e-bf3afb74f640"],
+Cell[2038, 62, 385, 9, 30, "Input",ExpressionUUID->"e171117f-96af-4db6-b16c-09a858a068fc"],
+Cell[2426, 73, 460, 10, 30, "Input",ExpressionUUID->"302188e8-c65f-4d5f-b6ed-3694ae0ebbe3"],
+Cell[2889, 85, 407, 9, 30, "Input",ExpressionUUID->"999c7ed3-8874-445d-b22a-d52c0535526b"],
+Cell[3299, 96, 324, 6, 30, "Input",ExpressionUUID->"ea18a5ec-eb96-46ac-82e7-4318596ee8a2"],
+Cell[3626, 104, 299, 6, 30, "Input",ExpressionUUID->"b0e43a9a-0f74-4ad8-926a-a3d1c79da289"],
+Cell[3928, 112, 333, 7, 30, "Input",ExpressionUUID->"0a9c8675-dc38-49af-ab4b-dce580a059df"],
+Cell[4264, 121, 292, 6, 30, "Input",ExpressionUUID->"913309de-5793-46ab-af8e-fbd383c2aa97"],
+Cell[4559, 129, 300, 6, 30, "Input",ExpressionUUID->"338e92ea-0e27-4e9e-bc9a-c36a5aaeb5c7"]
+}
+]
+*)
+
