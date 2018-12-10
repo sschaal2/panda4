@@ -374,19 +374,16 @@ myDrawGLElement(int num, double length, int flag)
     glCallList(link4);
     break;
 
-
   case J6: 
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
-    glColor4fv(gray);
     glRotated((GLdouble)90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
+    glColor4fv(gray);
     glCallList(link5);
     break;
-
 
   case J7: 
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
     glColor4fv(gray);
-    //glTranslated(0.046,0.00,0.00);
     glRotated((GLdouble)-90.,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);
     glRotated((GLdouble)-90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
     glCallList(link6);
@@ -398,7 +395,6 @@ myDrawGLElement(int num, double length, int flag)
     glRotated((GLdouble)90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
     glCallList(link7);
     break;
-
 
   default:
 
