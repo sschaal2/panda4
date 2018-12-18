@@ -80,7 +80,7 @@ set(SRCS_XVISION
 	${SRCS_COMMON}
 	)
 
-set(SRC_XPROBOT
+set(SRC_XRPANDA
 	panda_servo_unix.c 
 	SL_user_common.c 
 	SL_kinematics.c
@@ -123,7 +123,7 @@ if($ENV{HOST} MATCHES ${PANDA_HOST})
   add_executable("xr${NAME}" ${SRC_XRMAIN})
   target_link_libraries("xr${NAME}" SLcommon utility ${LAB_STD_LIBS})
 
-  add_executable(xprobot ${SRCS_XPROBOT})
-  target_link_libraries(xprobot SLcommon utility HDU HD rt ${LAB_STD_LIBS})
+  add_executable(xprobot ${SRCS_XRPANDA})
+  target_link_libraries(xrpanda SLcommon utility HDU HD rt ${LAB_STD_LIBS})
 
 endif()
