@@ -32,21 +32,21 @@ int servo_enabled = FALSE;
 double servo_time = 0;
 
 /*!*****************************************************************************
- *******************************************************************************
- \note  main
- \date  Nov. 2007
+*******************************************************************************
+\note  main
+\date  Nov. 2007
  
- \remarks 
+\remarks 
  
- A simple program creating multiple processes
+A simple program creating multiple processes
  
- *******************************************************************************
- Function Parameters: [in]=input,[out]=output
+*******************************************************************************
+Function Parameters: [in]=input,[out]=output
  
- \param[in]     argc : number of elements in argv
- \param[in]     argv : array of argc character strings
+\param[in]     argc : number of elements in argv
+\param[in]     argv : array of argc character strings
  
- ******************************************************************************/
+******************************************************************************/
 int 
 main(int argc, char**argv)
 
@@ -120,10 +120,10 @@ main(int argc, char**argv)
   if (graphics_flag) {
     if (fork() == 0) {
       sprintf(argv_ptr[geometry_argv],"90x8+%d+134",display_width-delta_width);
-    if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
-				   "openGL_servo_geometry", string))
-      if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
-	strcpy(argv_ptr[geometry_argv],xstring);
+      if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
+				     "openGL_servo_geometry", string))
+	if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
+	  strcpy(argv_ptr[geometry_argv],xstring);
       sprintf(argv_ptr[background_argv],"LightYellow");
       sprintf(argv_ptr[servo_argv],"xopengl");
       sprintf(argv_ptr[nice_argv],"19");
