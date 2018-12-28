@@ -89,18 +89,18 @@ main(int argc, char**argv)
   semTake(sm_init_process_ready_sem,WAIT_FOREVER);
   
   // the vision servo
-  if (fork() == 0) {
-    sprintf(argv_ptr[geometry_argv],"90x12+%d+454",display_width-delta_width);
-    if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
-				   "vision_servo_geometry", string))
-      if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
-	strcpy(argv_ptr[geometry_argv],xstring);
-    sprintf(argv_ptr[background_argv],"LightGoldenrod");
-    sprintf(argv_ptr[servo_argv],"xvision");
-    execvp("xterm",argv_ptr);
-    exit(-1);
-  }
-  semTake(sm_init_process_ready_sem,WAIT_FOREVER);
+  /* if (fork() == 0) { */
+  /*   sprintf(argv_ptr[geometry_argv],"90x12+%d+454",display_width-delta_width); */
+  /*   if (read_parameter_pool_string(config_files[PARAMETERPOOL],  */
+  /* 				   "vision_servo_geometry", string)) */
+  /*     if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h)) */
+  /* 	strcpy(argv_ptr[geometry_argv],xstring); */
+  /*   sprintf(argv_ptr[background_argv],"LightGoldenrod"); */
+  /*   sprintf(argv_ptr[servo_argv],"xvision"); */
+  /*   execvp("xterm",argv_ptr); */
+  /*   exit(-1); */
+  /* } */
+  /* semTake(sm_init_process_ready_sem,WAIT_FOREVER); */
 
   // the motor servo
   if (fork() == 0) {

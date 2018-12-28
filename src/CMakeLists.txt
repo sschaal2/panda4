@@ -33,10 +33,14 @@ set(CMAKE_BUILD_TYPE RelWithDebInfo) # Optimization with debugging info
 include_directories(BEFORE ../include)
 include_directories(BEFORE ../src)
 include_directories(BEFORE ../math)
+include_directories(BEFORE ../../libfranka/include)
 
 if($ENV{HOST} MATCHES ${PANDA_HOST})
   add_definitions(-DPANDA)
+  link_directories($ENV{LAB_ROOT}/libfranka/build ${CMAKE_LIBRARY_PATH})
 endif()
+
+set(CMAKE_CXX_STANDARD 11)
 
 # robot name
 set(NAME panda)
@@ -80,8 +84,8 @@ set(SRCS_XVISION
 	${SRCS_COMMON}
 	)
 
-set(SRC_XRPANDA
-	panda_servo_unix.c 
+set(SRCS_XRPROBOT
+	panda_servo_unix.cpp 
 	SL_user_common.c 
 	SL_kinematics.c
 	)
@@ -102,8 +106,8 @@ target_link_libraries(xpest SLcommon utility ${LAB_STD_LIBS})
 add_executable(xmotor ${SRCS_XMOTOR})
 target_link_libraries(xmotor SLmotor SLcommon utility ${LAB_STD_LIBS})
 
-add_executable(xvision ${SRCS_XVISION})
-target_link_libraries(xvision SLvision SLcommon lwpr utility ${LAB_STD_LIBS})
+#add_executable(xvision ${SRCS_XVISION})
+#target_link_libraries(xvision SLvision SLcommon lwpr utility ${LAB_STD_LIBS})
 
 add_library("${NAME}" ${SRCS_COMMON})
 install(TARGETS "${NAME}" ARCHIVE DESTINATION ${LAB_LIBDIR})
@@ -123,7 +127,7 @@ if($ENV{HOST} MATCHES ${PANDA_HOST})
   add_executable("xr${NAME}" ${SRC_XRMAIN})
   target_link_libraries("xr${NAME}" SLcommon utility ${LAB_STD_LIBS})
 
-  add_executable(xprobot ${SRCS_XRPANDA})
-  target_link_libraries(xrpanda SLcommon utility HDU HD rt ${LAB_STD_LIBS})
+  add_executable(xrprobot ${SRCS_XRPROBOT})
+  target_link_libraries(xrprobot franka SLcommon utility  rt ${LAB_STD_LIBS})
 
 endif()

@@ -58,21 +58,15 @@ main(int argc, char**argv)
 
   // the real-time flag
   sprintf(argv_array[c++],"-rt");
-  sprintf(argv_array[c++],"-rtc");
 
-  // check for flags that disable the head or the arm:
-  for (i=1; i<argc; ++i)
-    if (strcmp(argv[i],"-no-arm")==0 || strcmp(argv[i],"-na")==0)
-      no_arm_flag = TRUE;
-  for (i=1; i<argc; ++i)
-    if (strcmp(argv[i],"-no-hand")==0)
-      no_hand_flag = TRUE;
-
-  if (no_arm_flag)
-    sprintf(argv_array[c++],"-na");
-  if(no_hand_flag)
-    sprintf(argv_array[c++],"-no-hand");
-
+  // check for IP adddress of robot
+  for (i=1; i<argc; ++i) {
+    if (strcmp(argv[i],"-ip")==0 && i+1<argc) {
+      sprintf(argv_array[c++],"-ip");
+      sprintf(argv_array[c++],"%s",argv[i+1]);
+      break;
+    }
+  }
 
   for (i=0; i<c; ++i) 
     argv_ptr[i] = argv_array[i];
@@ -103,8 +97,8 @@ main(int argc, char**argv)
       if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
         strcpy(argv_ptr[geometry_argv],xstring);
     sprintf(argv_ptr[background_argv],"PowderBlue");
-    sprintf(argv_ptr[servo_argv],"xrtask");
-    sprintf(argv_ptr[title_argv],"xrtask");
+    sprintf(argv_ptr[servo_argv],"xtask");
+    sprintf(argv_ptr[title_argv],"xtask");
     execvp("xterm",argv_ptr);
     exit(-1);
   }
@@ -118,8 +112,8 @@ main(int argc, char**argv)
       if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
         strcpy(argv_ptr[geometry_argv],xstring);
     sprintf(argv_ptr[background_argv],"thistle");
-    sprintf(argv_ptr[servo_argv],"xrmotor");
-    sprintf(argv_ptr[title_argv],"xrmotor");
+    sprintf(argv_ptr[servo_argv],"xmotor");
+    sprintf(argv_ptr[title_argv],"xmotor");
     execvp("xterm",argv_ptr);
     exit(-1);
   }
@@ -143,19 +137,19 @@ main(int argc, char**argv)
     semTake(sm_init_process_ready_sem,WAIT_FOREVER);
   }
 
-  // the simulation
-  //  if (fork() == 0) {
-  //    sprintf(argv_ptr[geometry_argv],"90x8+%d+0",display_width-delta_width);
-  //    if (read_parameter_pool_string(config_files[PARAMETERPOOL],
-  //				   "simulation_servo_geometry", string))
-  //      if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
-  //	strcpy(argv_ptr[geometry_argv],xstring);
-  //    sprintf(argv_ptr[background_argv],"LightGray");
-  //    sprintf(argv_ptr[servo_argv],"xsimulation");
-  //    sprintf(argv_ptr[nice_argv],"0");
-  //    execvp("xterm",argv_ptr);
-  //    exit(-1);
-  //  }
+  // the panda robot
+  if (fork() == 0) {
+    sprintf(argv_ptr[geometry_argv],"90x8+%d+30",display_width-delta_width);
+    if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
+				   "panda_servo_geometry", string))
+      if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
+	strcpy(argv_ptr[geometry_argv],xstring);
+    sprintf(argv_ptr[background_argv],"LightGray");
+    sprintf(argv_ptr[servo_argv],"xrprobot");
+    sprintf(argv_ptr[nice_argv],"0");
+    execvp("xterm",argv_ptr);
+    exit(-1);
+  }
 
   // monitor dying child process and kill all other if this happens
   waitpid(0,&stat_loc,options);

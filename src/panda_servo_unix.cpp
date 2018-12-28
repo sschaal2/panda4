@@ -1,20 +1,29 @@
 /*!=============================================================================
   ==============================================================================
 
-  \file    panda_servo_unix.c
+  \file    panda_servo_unix.cpp
 
   \author  Stefan Schaal
-  \date    2007
+  \date    2018
 
   ==============================================================================
   \remarks
 
   Runs a servo loop for input/output with the actual panda robot
-  by using the panda APIs
+  by using the libfranka APIs
 
   ============================================================================*/
 
 // system includes
+#include <array>
+#include <atomic>
+#include <cmath>
+#include <functional>
+#include <iostream>
+#include <iterator>
+#include <mutex>
+#include <thread>
+
 #include "SL_system_headers.h"
 
 // private includes
@@ -31,13 +40,11 @@
 #include "SL_shared_memory.h"
 
 // panda includes
-#include <assert.h>
-#include "conio.h"
-#include <ctype.h>
-#include <HD/hd.h>
-#include <HDU/hduVector.h>
-#include <HDU/hduError.h>
-
+#include <franka/duration.h>
+#include <franka/exception.h>
+#include <franka/model.h>
+#include <franka/rate_limiting.h>
+#include <franka/robot.h>
 
 #define TRANSLATION_FILE "Translation.cf"
 #define TIME_OUT_NS  NO_WAIT
@@ -50,11 +57,6 @@ double        **joint_lin_rot;
 double         *pos_polar;
 double         *load_polar;
 
-// panda device & scheduler
-HHD               hHD;
-HDSchedulerHandle hHandle;
-
-
 //! local variables
 typedef struct Translation {
   double slope;
@@ -66,12 +68,11 @@ static Translation     joint_trans_velocities[N_DOFS+1];
 static Translation     joint_trans_torques[N_DOFS+1];
 static Translation     joint_trans_desired_torques[N_DOFS+1];
 static Translation     misc_trans_sensors[N_MISC_SENSORS+1];
-static int             raw_positions[N_DOFS+1];
-static int             raw_velocities[N_DOFS+1];
-static int             last_raw_positions[N_DOFS+1];
-static int             raw_torques[N_DOFS+1];
-static int             raw_desired_torques[N_DOFS+1];
-static int             raw_misc_sensors[N_MISC_SENSORS+1];
+static double          raw_positions[N_DOFS+1];
+static double          raw_velocities[N_DOFS+1];
+static double          raw_torques[N_DOFS+1];
+static double          raw_desired_torques[N_DOFS+1];
+static double          raw_misc_sensors[N_MISC_SENSORS+1];
 static SL_Jstate       last_joint_sim_state[N_DOFS+1];
 
 static int             panda_servo_errors = 0;
@@ -80,15 +81,10 @@ static long            panda_servo_calls  = 0;
 static int             panda_servo_rate;
 static double          panda_time_overrun = 0;
 
-static double          real_time = 0;
-static double          last_real_time = 0;
 static double          real_time_dt = 0;
-static double          tick_time_used;
-static struct timeval  tp,start_tp;
 
 // global functions
-HDCallbackCode HDCALLBACK run_panda_servo(void *dptr);
-HDCallbackCode HDCALLBACK calibrate_panda(void *dptr);
+
 
 
 // local functions
@@ -101,19 +97,20 @@ static void translate_sensor_readings(SL_Jstate *joint_raw_state);
 static void translate_misc_sensor_readings(double *misc_raw_sensors);
 static void translate_commands(SL_Jstate *commands);
 
-static int  calibratePanda(void);
-
 static void addVarsToDataCollection(void);
 
-static int  init_panda_servo(void);
+static int  init_panda_servo(franka::Robot &robot);
+static int  run_panda_servo(void);
 
 static void read_sensor_offs(void);
+
+static void generate_data_dynamics_param(franka::Model &model);
 
 
 /*!*****************************************************************************
  *******************************************************************************
 \note  main
-\date  Feb 1999
+\date  Dec. 2018
 \remarks 
 
 initializes everything and starts the servo loop
@@ -128,19 +125,40 @@ initializes everything and starts the servo loop
 int 
 main(int argc, char**argv)
 {
-  int i, j;
+  int  i,j;
+  char ip_string[20];
 
-  sprintf(servo_name,"phan");
+  sprintf(servo_name,"panda");
 
   // parse command line options
   parseOptions(argc, argv);
 
+  // check for Panda IP address
+  for (i=1; i<argc; ++i) {
+    if (strcmp(argv[i],"-ip")==0) {
+      if (i+1 < argc) {
+	strcpy(ip_string,argv[i+1]);
+	printf("Connecting to Panda at %s ...\n",ip_string);
+	break;
+      }
+    }
+  }
+  if (i>= argc) {
+    // no IP found
+    // try to find it in the parameter pool
+    if (read_parameter_pool_string(config_files[PARAMETERPOOL],"panda_ip",ip_string)) {
+      ;  // ip string found
+    } else {
+      // abort
+      printf("No IP address for Panda\n");
+      std::cout << "Press Enter to continue..." << std::endl;
+      std::cin.ignore();
+      return FALSE;
+    }
+  }
+
   // adjust settings if SL runs for a real robot
   setRealRobotOptions();
-
-  // initalize the servo
-  if (!init_panda_servo())
-    return FALSE;
 
   // signal handlers
   installSignalHandlers();
@@ -148,12 +166,67 @@ main(int argc, char**argv)
   // spawn command line interface thread
   spawnCommandLineThread(NULL);
 
-  // spawn the panda thread
-  hHandle = hdScheduleAsynchronous(run_panda_servo, 0, HD_MAX_SCHEDULER_PRIORITY);
-  servo_enabled = TRUE;
+  // initialize Panda robot
+  try {
+    franka::Robot robot(ip_string);
 
-  // wait for completion of the thread
-  hdWaitForCompletion(hHandle, HD_WAIT_INFINITE);
+    // Load the kinematics and dynamics model and keep it accessible in the scope of this file
+    franka::Model model = robot.loadModel();
+
+    // Define callback for the joint torque control loop.
+    std::function<franka::Torques(const franka::RobotState&, franka::Duration)> panda_callback = 
+      [&model,&robot](const franka::RobotState& state, franka::Duration period) -> franka::Torques {
+
+      // extract all relevant info from the robot state variable
+      for (size_t i = 0; i < 7; i++) {
+	raw_positions[i+1]  = state.q[i];
+	raw_velocities[i+1] = state.dq[i];
+	raw_torques[i+1]    = state.tau_J[i];
+      }
+
+      // check the timing: number of milliseconds the servo loop ran: should be 1 for perfect behavior
+      real_time_dt = period.toMSec();
+
+      // all processing is done in separate function
+      std::array<double, 7> tau_d;
+
+      if (! run_panda_servo() ) {
+
+	robot.stop();
+
+      } else {
+
+	// copy the control commands back into franka::Torques
+	for (size_t i = 0; i < 7; i++) {
+	  tau_d[i] = raw_desired_torques[i+1] * 0.0; //sschaal only zero torques at this moment: need to subtract gravity!
+	}
+      }
+      
+      // Send torque command.
+      return tau_d;
+    };
+
+    // initalize the servo
+    if (!init_panda_servo(robot))
+      return FALSE;
+
+    generate_data_dynamics_param(model);
+
+    // Start real-time control with the callback without rate limitter and no cutoff
+    servo_enabled = TRUE;
+    // default first data collection
+    scd();
+
+    robot.control(panda_callback,false,1000.0);
+
+  } catch (const franka::Exception& ex) {
+    std::cerr << ex.what() << std::endl;
+    std::cout << "Press Enter to continue..." << std::endl;
+    std::cin.ignore();
+    
+    return FALSE;
+  } 
+
 
   return TRUE;
 }
@@ -161,7 +234,7 @@ main(int argc, char**argv)
 /*!*****************************************************************************
  *******************************************************************************
 \note  init_panda_servo
-\date  Nov. 2007
+\date  Dec. 2018
    
 \remarks 
 
@@ -170,13 +243,12 @@ main(int argc, char**argv)
  *******************************************************************************
  Function Parameters: [in]=input,[out]=output
 
-     none
+     \param[in,out]     robot  : robot object of Panda
 
  ******************************************************************************/
 static int
-init_panda_servo(void)
+init_panda_servo(franka::Robot &robot)
 {
-  HDErrorInfo error;
   int i,j;
   double quat[N_QUAT+1];
   double pos[N_CART+1];
@@ -196,7 +268,6 @@ init_panda_servo(void)
   // initalizes translation to and from units
   if (!init_translation())
     return FALSE;
-
 
   // initialize the base variables
   bzero((void *)&base_state,sizeof(base_state));
@@ -225,9 +296,8 @@ init_panda_servo(void)
       base_orient.q[i] = qtmp.q[i];
   }
 
-
   // initialize servo variables
-  servo_time           = 0;
+  servo_time         = 0;
   panda_servo_errors = 0;
   panda_servo_time   = 0;
   panda_servo_calls  = 0;
@@ -249,45 +319,19 @@ init_panda_servo(void)
   if (!read_sensor_offsets(config_files[SENSOROFFSETS]))
     return FALSE;
 
-  // initialize Panda
-  hHD = hdInitDevice(HD_DEFAULT_DEVICE);
-  
-  if (HD_DEVICE_ERROR(error = hdGetError())) {
-    hduPrintError(stderr, &error, "Failed to initialize Panda");
-    fprintf(stderr, "\nPress any key to quit.\n");
-    getchar();
-    return FALSE;
-  }
+  // set Panda parameters
 
-  hdSetSchedulerRate((HDulong)panda_servo_rate);
-  hdStartScheduler();
-
-  if (HD_DEVICE_ERROR(error = hdGetError()))  {
-    hduPrintError(stderr, &error, "Failed to start scheduler");
-    fprintf(stderr, "\nPress any key to quit.\n");
-    getchar();
-    return FALSE;
-  }
+  // Set collision behavior
+  robot.setCollisionBehavior(
+			     {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
+			     {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
+			     {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}},
+			     {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}});
+  robot.setJointImpedance({{3000, 3000, 3000, 2500, 2500, 2000, 2000}});
+  robot.setCartesianImpedance({{3000, 3000, 3000, 300, 300, 300}});
 
   printf("\nPanda initialized\n");
 
-  // calibrate -- we assume that the current position is the zero position
-  if (!calibratePanda())
-    return FALSE;
-
-  // disable velocity limits
-  if ( hdIsEnabled(HD_SOFTWARE_VELOCITY_LIMIT))
-    hdDisable(HD_SOFTWARE_VELOCITY_LIMIT);   
-
-  // enable motor control              
-  if ( !hdIsEnabled(HD_FORCE_OUTPUT) )
-    hdEnable(HD_FORCE_OUTPUT);   
-
-  // what time is it?
-  gettimeofday(&start_tp, NULL);
-  last_real_time = 0;
-
-  scd();
 
   return TRUE;
 }
@@ -295,79 +339,40 @@ init_panda_servo(void)
 /*!*****************************************************************************
  *******************************************************************************
 \note  run_panda_servo
-\date  Dec 1997
+\date  Dec 2018
    
 \remarks 
 
-    this function is clocked by the panda thread at the moto_servo_rate
+    this function is clocked by the panda callback at the moto_servo_rate
 
  *******************************************************************************
  Function Parameters: [in]=input,[out]=output
 
- \param[in]     dptr  : not used
+         none
+     
+         returns sucess or failure
 
  ******************************************************************************/
-HDCallbackCode HDCALLBACK 
-run_panda_servo(void *dptr) 
+int
+run_panda_servo(void) 
 {
   int      i,j;
   double   aux;
-  HDlong   q_raw[6];
-  HDlong   load_raw[3];
-  HDlong   command_raw[3];
-  HDdouble tick_duration;
 
   // increment time
   servo_time += 1./(double)panda_servo_rate;
   panda_servo_time = servo_time;
   ++panda_servo_calls;
 
-  // get the real time
-  gettimeofday(&tp, NULL);
-  real_time      = (tp.tv_sec-start_tp.tv_sec)+(tp.tv_usec-start_tp.tv_usec)/1000000.;
-  real_time_dt   = real_time-last_real_time;
-  last_real_time = real_time;
-
-  // too long processing -- shut down
-  if (real_time_dt > 50./(double)panda_servo_rate) {
-    hdDisable(HD_FORCE_OUTPUT);  
-    printf("Force output disable due to dt = %f\n",real_time_dt);
-  }
-
-  // too short processing -- skip this cycle
-  if (real_time_dt < 0.25/(double)panda_servo_rate) {
-    return HD_CALLBACK_CONTINUE;
-  }
-
-  // read information from the robot
-  hdBeginFrame(hHD); 
-  hdGetLongv(HD_CURRENT_ENCODER_VALUES,q_raw); 
-  hdGetLongv(HD_LAST_MOTOR_DAC_VALUES,load_raw); 
-
-  // save last values
-  for (i=1; i<=N_DOFS; ++i)
-    last_raw_positions[i] = raw_positions[i];
-
-  // assign to final values and convert to units
-  raw_positions[SR]   = q_raw[0];
-  raw_positions[SFE]  = q_raw[2];
-  raw_positions[EB ]  = q_raw[2]-q_raw[1];
-
-  for (i=1; i<=N_DOFS; ++i)
-    raw_velocities[i]  = (raw_positions[i]-last_raw_positions[i])/
-      (double)real_time_dt;
-
-  raw_torques[SR]     = load_raw[0];
-  raw_torques[SFE]    = load_raw[2];
-  raw_torques[EB ]    = load_raw[1];
-
   // translate the raw values to units
   for (i=1; i<=N_DOFS; ++i)
     last_joint_sim_state[i] = joint_sim_state[i];
   translate_sensor_readings(joint_sim_state);
-  for (i=1; i<=N_DOFS; ++i)
-    joint_sim_state[i].thdd = (joint_sim_state[i].thd - last_joint_sim_state[i].thd)/
-      (double)real_time_dt;      
+  if (real_time_dt > 0) {
+    for (i=1; i<=N_DOFS; ++i)
+      joint_sim_state[i].thdd = (joint_sim_state[i].thd - last_joint_sim_state[i].thd)/
+	(double)real_time_dt;
+  }
   translate_misc_sensor_readings(misc_sim_sensor);
 
   // send to shared memory
@@ -376,8 +381,7 @@ run_panda_servo(void *dptr)
 
   // trigger the motor servo with semFlush for nicer synchronization
   if (semFlush(sm_motor_servo_sem) == ERROR) {
-    hdEndFrame(hHD); 
-    return HD_CALLBACK_DONE;
+    return FALSE;
   }
 
   // read the commands
@@ -385,26 +389,14 @@ run_panda_servo(void *dptr)
 
   // translate commands to raw
   translate_commands(joint_sim_state);
-  command_raw[0] = raw_desired_torques[SR];
-  command_raw[1] = raw_desired_torques[EB];
-  command_raw[2] = raw_desired_torques[SFE];
-
-  // execute commands
-  hdSetLongv(HD_CURRENT_MOTOR_DAC_VALUES, command_raw);
-  hdEndFrame(hHD); 
 
   // data collection
   writeToBuffer();
 
   // check for servo overuns
-  tick_duration = hdGetSchedulerTimeStamp();
-  tick_time_used = tick_duration;
-  aux = tick_duration - 1./(double)panda_servo_rate;
-  if (aux > 0)
-    panda_time_overrun += aux;
-  //panda_servo_errors += ceil(tick_duration*panda_servo_rate) - 1;
+  panda_servo_errors += real_time_dt - 1;
 
-  return HD_CALLBACK_CONTINUE;
+  return TRUE;
 }
 
 /*!*****************************************************************************
@@ -578,7 +570,6 @@ translate_misc_sensor_readings(double *misc_raw_sensor)
  \param[in]     commands : the structure containing the commands
 
  ******************************************************************************/
-#define MAX_SAFE_COMMAND (3404*2) //!< 3404 recommended by SensAble
 static void
 translate_commands(SL_Jstate *command)
 {
@@ -594,57 +585,10 @@ translate_commands(SL_Jstate *command)
     raw = temp/joint_trans_desired_torques[i].slope -
       joint_trans_desired_torques[i].offset; 
 
-    if (raw < -MAX_SAFE_COMMAND) 
-      raw = -MAX_SAFE_COMMAND;
-    if (raw > MAX_SAFE_COMMAND)
-      raw = MAX_SAFE_COMMAND;
-
     raw_desired_torques[i] = (int) raw;
 
   }
 
-}
-
-/*!*****************************************************************************
- *******************************************************************************
-\note  calibratePanda
-\date  Dec. 2007
-   
-\remarks 
-
-    zeros the encoders of the pandam, i.e., make the current position the
-    zero position.
-
- *******************************************************************************
- Function Parameters: [in]=input,[out]=output
-
-     none
-
- ******************************************************************************/
-static int
-calibratePanda(void)
-{
-  HDErrorInfo error;
-  void *dptr = NULL;
-
-  hdScheduleAsynchronous(calibrate_panda,0,HD_MAX_SCHEDULER_PRIORITY);
-
-  if (HD_DEVICE_ERROR(error = hdGetError())) {
-    hduPrintError(stderr, &error, "Failed to calibrate Panda");
-    fprintf(stderr, "\nPress any key to quit.\n");
-    getchar();
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-HDCallbackCode HDCALLBACK
-calibrate_panda(void *dptr) 
-{
-  hdUpdateCalibration(HD_CALIBRATION_ENCODER_RESET);
-
-  return HD_CALLBACK_DONE;
 }
 
 
@@ -669,9 +613,7 @@ addVarsToDataCollection(void)
 {
   int i;
   
-  addVarToCollect((char *)&(real_time),"real_time","s", DOUBLE,FALSE);
   addVarToCollect((char *)&(real_time_dt),"real_time_dt","s", DOUBLE,FALSE);
-  addVarToCollect((char *)&(tick_time_used),"tick_time_used","s", DOUBLE,FALSE);
 
   for (i=1; i<=N_DOFS; ++i) {
     char string[100];
@@ -883,8 +825,6 @@ status(void)
   printf("            Servo Rate             = %d\n",servo_base_rate);
   printf("            Servo Errors           = %d (%6.2f%%)\n",panda_servo_errors,
 	 (double)panda_servo_errors/(double)panda_servo_calls*100);
-  printf("            Time Overrun           = %f (%6.2f%%)\n",panda_time_overrun,
-	 panda_time_overrun/panda_servo_time*100.0);
   printf("\n");
 
 }
@@ -908,5 +848,103 @@ static void
 read_sensor_offs(void)
 {
   read_sensor_offsets(config_files[SENSOROFFSETS]);
+}
+
+/*!*****************************************************************************
+ *******************************************************************************
+\note  generate_data_dynamics_param
+\date  Dec. 2018
+   
+\remarks 
+
+generates a data file to estimate the Panda Rigid Body Parameters
+
+ *******************************************************************************
+ Function Parameters: [in]=input,[out]=output
+
+ \param[out]    model : the franka::Model
+
+ ******************************************************************************/
+static void
+generate_data_dynamics_param(franka::Model &model)
+{
+  franka::RobotState state;
+  std::array<double, 7> coriolis;
+  std::array<double, 7> gravity;
+  std::array<double, 49> mass;
+  
+  int count=0,temp;
+
+  /*
+  for (int i=0; i<7; ++i) {
+    printf("%d. %f %f %f %f\n",i,joint_range[i+1][MIN_THETA], joint_range[i+1][MAX_THETA],franka::kMaxJointVelocity[i],franka::kMaxJointAcceleration[i]);
+  }
+  */
+  printf("Generating parameter estimation data ...");
+  
+  // how much data to collect
+  //int max_data = pow(2.0,21.0);
+  int max_data = pow(2.0,7.0);
+    
+  // prepare data collection
+  changeSamplingTime( max_data/(double)panda_servo_rate );
+  scd();
+
+  while (count++ < max_data) {
+    temp = count;
+    
+    for (int i=J1; i<=J7; ++i) { // position: some slack to stay away from extermes
+      if (temp & 0x1)
+	joint_sim_state[i].th = joint_range[i][MAX_THETA] - 0.03; 
+      else
+	joint_sim_state[i].th = joint_range[i][MIN_THETA] + 0.03;
+
+      state.q[i-1] = joint_sim_state[i].th;
+      temp = temp >> 1;
+    }
+    /*
+    for (int i=J1; i<=J7; ++i) { // velocity
+      if (temp & 0x1)
+	joint_sim_state[i].thd = franka::kMaxJointVelocity[i-1];
+      else
+	joint_sim_state[i].thd = -franka::kMaxJointVelocity[i-1];
+
+      state.dq[i-1] = joint_sim_state[i].thd;      
+      temp = temp >> 1;
+    }
+
+    for (int i=J1; i<=J7; ++i) { // accelerations
+      if (temp & 0x1)
+	joint_sim_state[i].thdd = franka::kMaxJointAcceleration[i-1];
+      else
+	joint_sim_state[i].thdd = -franka::kMaxJointAcceleration[i-1];
+
+      state.ddq_d[i-1] = joint_sim_state[i].thdd;      
+      temp = temp >> 1;
+    }
+    */
+    // compute the dynamics from these values in state
+    gravity = model.gravity(state); // default gravity is -9.81 in Z
+    coriolis = model.coriolis(state);
+    mass = model.mass(state);
+
+    for (int i=J1; i<=J7; ++i ) {
+      joint_sim_state[i].u = gravity[i-1] + coriolis[i-1];
+      for (int j=J1; j<=J7; ++j) {
+	joint_sim_state[i].u += mass[i-1 + (j-1)*7]*state.ddq_d[j-1];
+      }
+      joint_sim_state[i].load = joint_sim_state[i].u;
+    }
+
+    writeToBuffer();
+
+  }
+
+  printf("done\n");
+
+  saveData();
+  changeSamplingTime( 5.0);
+
+  
 }
 

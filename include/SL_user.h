@@ -78,7 +78,9 @@ enum ColorBlobs {
 
 // define the DOFs of this robot
 enum RobotDOFs {
-  J1 = 1,
+  BASE=0,
+  
+  J1,
   J2,
   J3,
   J4,
