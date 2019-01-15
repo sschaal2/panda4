@@ -26,6 +26,7 @@
 #include "SL_sensor_proc.h"
 #include "SL_shared_memory.h"
 #include "SL_motor_servo.h"
+#include "SL_dynamics.h"
 
 #define TIME_OUT_NS  1000000000
 
@@ -289,6 +290,33 @@ void
 user_controller(double *u, double *uf)
 {
   int i,j;
+  SL_Jstate js_local[N_DOFS+1];
+  SL_DJstate js_des_local[N_DOFS+1];
+
+  // this adds gravity compensation by default in simulation, the same way
+  // as the Franka adds gravity compensation
+  if (!real_robot_flag) {
+
+    for (i=1; i<=N_DOFS; ++i) {
+      js_local[i] = joint_state[i];
+      js_des_local[i] = joint_des_state[i];
+      
+      js_local[i].thd  = 0.0;
+      js_local[i].thdd = 0.0;
+      js_des_local[i].th = joint_state[i].th;
+      js_des_local[i].thd = 0.0;
+      js_des_local[i].thdd = 0.0;
+    }
+    
+    SL_InvDynNE_Gravity(js_local,js_des_local,endeff,&base_state,&base_orient,gravity);
+    
+    for (i=1; i<=N_DOFS; ++i) {
+      u[i] += js_des_local[i].uff;
+      //printf("%d.%f\n",i,js_des_local[i].uff);
+    }
+  }
+
+  
 }
 
 /*!*****************************************************************************

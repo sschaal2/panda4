@@ -359,9 +359,9 @@ panda_InvDynNEfunc5(void)
 a0[1]=baseo[0].add[1]*S00[1][1] + baseo[0].add[2]*S00[1][2] + baseo[0].add[3]*S00[1][3];
 a0[2]=baseo[0].add[1]*S00[2][1] + baseo[0].add[2]*S00[2][2] + baseo[0].add[3]*S00[2][3];
 a0[3]=baseo[0].add[1]*S00[3][1] + baseo[0].add[2]*S00[3][2] + baseo[0].add[3]*S00[3][3];
-a0[4]=basec[0].xdd[1]*S00[1][1] + basec[0].xdd[2]*S00[1][2] + (gravity + basec[0].xdd[3])*S00[1][3];
-a0[5]=basec[0].xdd[1]*S00[2][1] + basec[0].xdd[2]*S00[2][2] + (gravity + basec[0].xdd[3])*S00[2][3];
-a0[6]=basec[0].xdd[1]*S00[3][1] + basec[0].xdd[2]*S00[3][2] + (gravity + basec[0].xdd[3])*S00[3][3];
+a0[4]=basec[0].xdd[1]*S00[1][1] + basec[0].xdd[2]*S00[1][2] + (gravityLocal + basec[0].xdd[3])*S00[1][3];
+a0[5]=basec[0].xdd[1]*S00[2][1] + basec[0].xdd[2]*S00[2][2] + (gravityLocal + basec[0].xdd[3])*S00[2][3];
+a0[6]=basec[0].xdd[1]*S00[3][1] + basec[0].xdd[2]*S00[3][2] + (gravityLocal + basec[0].xdd[3])*S00[3][3];
 
 a1[1]=state[1].thd*v1[2] + a0[1]*S10[1][1] + a0[2]*S10[1][2];
 a1[2]=-(state[1].thd*v1[1]) + a0[1]*S10[2][1] + a0[2]*S10[2][2];

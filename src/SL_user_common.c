@@ -21,6 +21,7 @@
 #include "SL.h"
 #include "SL_user.h"
 #include "SL_common.h"
+#include "SL_dynamics.h"
 
 // global variables
 char joint_names[][20]= {
@@ -136,6 +137,9 @@ setRealRobotOptions(void)
 
   // update the config file names
   read_config_files(config_files[CONFIGFILES]);
+
+  // set NE gravity to zero to mimic the way Franke is automically adding gravity comp
+  set_NE_local_gravity(0.0);
   
   return;
 
