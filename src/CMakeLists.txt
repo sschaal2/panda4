@@ -87,7 +87,7 @@ set(SRCS_XVISION
 set(SRCS_XRPROBOT
 	panda_servo_unix.cpp 
 	SL_user_common.c 
-	SL_kinematics.c
+	$ENV{PROG_ROOT}/SL/src/SL_kinematics.c 
 	)
 
 set(SRCS_OPENGL SL_user_openGL.c)

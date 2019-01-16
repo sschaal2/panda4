@@ -177,6 +177,10 @@ main(int argc, char**argv)
     std::function<franka::Torques(const franka::RobotState&, franka::Duration)> panda_callback = 
       [&model,&robot](const franka::RobotState& state, franka::Duration period) -> franka::Torques {
 
+      static int n_calls = 0;
+
+      ++n_calls;
+
       // extract all relevant info from the robot state variable
       for (size_t i = 0; i < 7; i++) {
 	raw_positions[i+1]  = state.q[i];
@@ -197,8 +201,13 @@ main(int argc, char**argv)
       } else {
 
 	// copy the control commands back into franka::Torques
-	for (size_t i = 0; i < 7; i++) {
-	  tau_d[i] = raw_desired_torques[i+1] * 0.0; //sschaal only zero torques at this moment: need to subtract gravity!
+	if (n_calls < 10) {  // these are a few start-up ticks to assure the task servo has the robot state
+	  for (size_t i = 0; i < 7; i++) 
+	    tau_d[i] = 0.0;
+	} else {
+	  for (size_t i = 0; i < 7; i++) {
+	    tau_d[i] = raw_desired_torques[i+1]; 
+	  }
 	}
       }
       
@@ -210,14 +219,17 @@ main(int argc, char**argv)
     if (!init_panda_servo(robot))
       return FALSE;
 
-    generate_data_dynamics_param(model);
+    //    generate_data_dynamics_param(model);
 
     // Start real-time control with the callback without rate limitter and no cutoff
     servo_enabled = TRUE;
     // default first data collection
     scd();
 
-    robot.control(panda_callback,false,1000.0);
+    // note that the rate limitter is enabled, such that the robot does not shut down
+    // e.g., when executing freeze. Normally, if smooth motion is generated, we should
+    // not get weird dynamics from this
+    robot.control(panda_callback,true,franka::kMaxCutoffFrequency);
 
   } catch (const franka::Exception& ex) {
     std::cerr << ex.what() << std::endl;
@@ -321,12 +333,12 @@ init_panda_servo(franka::Robot &robot)
 
   // set Panda parameters
 
-  // Set collision behavior
-  robot.setCollisionBehavior(
-			     {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
-			     {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}}, {{20.0, 20.0, 18.0, 18.0, 16.0, 14.0, 12.0}},
-			     {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}},
-			     {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}}, {{20.0, 20.0, 20.0, 25.0, 25.0, 25.0}});
+  // Set collision behavior: needs to be outside of real-time loop
+  robot.setCollisionBehavior({{100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0}},
+			     {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0, 100.0}},
+			     {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0}},
+			     {{100.0, 100.0, 100.0, 100.0, 100.0, 100.0}});
+  
   robot.setJointImpedance({{3000, 3000, 3000, 2500, 2500, 2000, 2000}});
   robot.setCartesianImpedance({{3000, 3000, 3000, 300, 300, 300}});
 
@@ -872,6 +884,7 @@ generate_data_dynamics_param(franka::Model &model)
   std::array<double, 7> coriolis;
   std::array<double, 7> gravity;
   std::array<double, 49> mass;
+  const int big=1000000;
   
   int count=0,temp;
 
@@ -883,8 +896,7 @@ generate_data_dynamics_param(franka::Model &model)
   printf("Generating parameter estimation data ...");
   
   // how much data to collect
-  //int max_data = pow(2.0,21.0);
-  int max_data = pow(2.0,7.0);
+  int max_data = pow(2.0,21.0);
     
   // prepare data collection
   changeSamplingTime( max_data/(double)panda_servo_rate );
@@ -899,15 +911,24 @@ generate_data_dynamics_param(franka::Model &model)
       else
 	joint_sim_state[i].th = joint_range[i][MIN_THETA] + 0.03;
 
+      joint_sim_state[i].th = (double)(random_number((long int) ((joint_range[i][MAX_THETA] - 0.03)*big),
+						     (long int) ((joint_range[i][MIN_THETA] + 0.03)*big)))/
+	(double)big;   
+
       state.q[i-1] = joint_sim_state[i].th;
       temp = temp >> 1;
     }
-    /*
+
     for (int i=J1; i<=J7; ++i) { // velocity
       if (temp & 0x1)
 	joint_sim_state[i].thd = franka::kMaxJointVelocity[i-1];
       else
 	joint_sim_state[i].thd = -franka::kMaxJointVelocity[i-1];
+
+      joint_sim_state[i].thd = (double)(random_number((long int) (franka::kMaxJointVelocity[i-1]*big),
+						     (long int) (-franka::kMaxJointVelocity[i-1]*big)))/
+	(double)big;   
+
 
       state.dq[i-1] = joint_sim_state[i].thd;      
       temp = temp >> 1;
@@ -919,10 +940,14 @@ generate_data_dynamics_param(franka::Model &model)
       else
 	joint_sim_state[i].thdd = -franka::kMaxJointAcceleration[i-1];
 
+      joint_sim_state[i].thdd = (double)(random_number((long int) (franka::kMaxJointAcceleration[i-1]*big),
+						     (long int) (-franka::kMaxJointAcceleration[i-1]*big)))/
+	(double)big;   
+
       state.ddq_d[i-1] = joint_sim_state[i].thdd;      
       temp = temp >> 1;
     }
-    */
+
     // compute the dynamics from these values in state
     gravity = model.gravity(state); // default gravity is -9.81 in Z
     coriolis = model.coriolis(state);
