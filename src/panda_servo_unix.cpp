@@ -28,6 +28,7 @@
 
 // private includes
 #include "utility.h"
+#include "utility_macros.h"
 #include "SL.h"
 #include "SL_common.h"
 #include "SL_objects.h"
@@ -188,10 +189,17 @@ main(int argc, char**argv)
 	raw_torques[i+1]    = state.tau_J[i];
       }
 
+      raw_misc_sensors[C_FX] = state.K_F_ext_hat_K[0];
+      raw_misc_sensors[C_FY] = state.K_F_ext_hat_K[1];
+      raw_misc_sensors[C_FZ] = state.K_F_ext_hat_K[2];
+      raw_misc_sensors[C_MX] = state.K_F_ext_hat_K[3];
+      raw_misc_sensors[C_MY] = state.K_F_ext_hat_K[4];
+      raw_misc_sensors[C_MZ] = state.K_F_ext_hat_K[5];
+
       // check the timing: number of milliseconds the servo loop ran: should be 1 for perfect behavior
       real_time_dt = period.toMSec();
 
-      // all processing is done in separate function
+      // all processing is done in a separate function
       std::array<double, 7> tau_d;
 
       if (! run_panda_servo() ) {
@@ -201,7 +209,7 @@ main(int argc, char**argv)
       } else {
 
 	// copy the control commands back into franka::Torques
-	if (n_calls < 10) {  // these are a few start-up ticks to assure the task servo has the robot state
+	if (n_calls <= 10) {  // these are a few start-up ticks to assure the task servo has the robot state
 	  for (size_t i = 0; i < 7; i++) 
 	    tau_d[i] = 0.0;
 	} else {
@@ -261,11 +269,13 @@ main(int argc, char**argv)
 static int
 init_panda_servo(franka::Robot &robot)
 {
-  int i,j;
+  int i,j, count;
   double quat[N_QUAT+1];
   double pos[N_CART+1];
   double euler[N_CART+1];
   double aux;
+  MY_MATRIX(R,1,N_CART,1,N_CART);
+  MY_VECTOR(v,1,N_CART);
 
 
   // get shared memory
@@ -276,6 +286,7 @@ init_panda_servo(franka::Robot &robot)
   joint_lin_rot     = my_matrix(1,n_dofs,1,6);
   pos_polar         = my_vector(1,n_dofs);
   load_polar        = my_vector(1,n_dofs);
+  
 
   // initalizes translation to and from units
   if (!init_translation())
@@ -341,6 +352,33 @@ init_panda_servo(franka::Robot &robot)
   
   robot.setJointImpedance({{3000, 3000, 3000, 2500, 2500, 2000, 2000}});
   robot.setCartesianImpedance({{3000, 3000, 3000, 300, 300, 300}});
+
+  // set the stiffness frame of the robot to the endeffector frame
+  std::array<double, 16> offset_homogeneous_matrix;
+  offset_homogeneous_matrix.fill(0.0);
+
+  // compute the rotation matrix of endeffector
+  for (i=1; i<=N_CART; ++i)
+    v[i] = endeff[FLANGE].a[i];
+
+  eulerToRotMat(v,R);
+
+  // sort all into a homogenous transformation matrix in column-major format (Franka!)
+  count = 0;
+  for (i=1; i<=N_CART; ++i) {
+    for (j=1; j<=N_CART; ++j) {
+      offset_homogeneous_matrix[count++] = R[j][i];
+    }
+    offset_homogeneous_matrix[count++] = 0.0;
+  }
+
+  for (i=1; i<=N_CART; ++i)
+    offset_homogeneous_matrix[count++] = endeff[FLANGE].x[i];
+
+  offset_homogeneous_matrix[count++] = 1.0;
+
+  robot.setK(offset_homogeneous_matrix);
+
 
   printf("\nPanda initialized\n");
 

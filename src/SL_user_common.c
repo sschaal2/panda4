@@ -62,6 +62,13 @@ char link_names[][20]= {
 
 char misc_sensor_names[][20] = {
   {"dummy"},
+  {"C_FX"}, 
+  {"C_FY"}, 
+  {"C_FZ"}, 
+  {"C_MX"}, 
+  {"C_MY"}, 
+  {"C_MZ"}, 
+
 };
 
 // the 1st to 2nd finger segment angles

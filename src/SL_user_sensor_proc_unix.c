@@ -276,18 +276,19 @@ send_des_command(void)
 
           allows the user to modify the commands currently computed by 
           the active controller. Note that only u is actually used in
-          the final send out of the commands to the robot, and ufb is only
-          to kept as feedback to the user for data collection.
+          the final send out of the commands to the robot, and ufb and uff 
+          is only kept as feedback to the user for data collection.
 
  *******************************************************************************
  Function Parameters: [in]=input,[out]=output
 
  \param[in,out] u     : the current total command
  \param[in,out] ufb   : the current feedback command
+ \param[in,out] uff   : the current feedforward command
 
  ******************************************************************************/
 void
-user_controller(double *u, double *uf)
+user_controller(double *u, double *ufb, double *uff)
 {
   int i,j;
   SL_Jstate js_local[N_DOFS+1];
@@ -312,6 +313,7 @@ user_controller(double *u, double *uf)
     
     for (i=1; i<=N_DOFS; ++i) {
       u[i] += js_des_local[i].uff;
+      uff[i] += js_des_local[i].uff;
       //printf("%d.%f\n",i,js_des_local[i].uff);
     }
   }

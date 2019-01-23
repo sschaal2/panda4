@@ -93,7 +93,15 @@ enum RobotDOFs {
 
 //! define miscellenous sensors of this robot
 enum RobotMiscSensors {
- N_ROBOT_MISC_SENSORS
+  // the computed load cell location is a the endeffector end, in local coordinates
+  C_FX = 1,       //!< computed load cell force in x
+  C_FY,           //!< computed load cell force in y
+  C_FZ,           //!< computed load cell force in z
+  C_MX,           //!< computed load cell moment in x
+  C_MY,           //!< computed load cell moment in y
+  C_MZ,           //!< computed load cell moment in z
+  
+  N_ROBOT_MISC_SENSORS
 };
 
 //! number of degrees-of-freedom of robot
