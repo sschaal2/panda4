@@ -479,13 +479,16 @@ drawForceTorqueSensor(void)
   double t[N_CART+1];
   double fscale_N=0.05;
   double fscale_Nm=0.05;
+  double s[N_CART+1];
+  double e[N_CART+1];
+  double arrow_width = 0.01;
 
   for (n=1; n<=N_ENDEFFS; ++n) {
     
     // rotate the force torque info to world coordinates
     for (i=1; i<=N_CART; ++i) {
-      f[i] = 0;
-      t[i] = 0;
+      f[i] = 0.;
+      t[i] = 0.;
       for (j=1; j<=N_CART; ++j) {
 	f[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[C_FX-1+j];
 	t[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[C_MX-1+j];
@@ -496,31 +499,29 @@ drawForceTorqueSensor(void)
     
     // move to the force torque sensor
     glTranslated(link_pos_sim[FLANGE][_X_],link_pos_sim[FLANGE][_Y_],link_pos_sim[FLANGE][_Z_]);
-    
-    glLineWidth(4.0);
-    
-    // draw the force and torque vector
-    glDisable(GL_LIGHTING); //to have constant colors 
-    
+
+
+    // the start and end point of the force vector
+    s[_X_] =  0.0;
+    s[_Y_] =  0.0;
+    s[_Z_] =  0.0;
+
+    e[_X_] = s[_X_] + f[_X_]*fscale_N;
+    e[_Y_] = s[_Y_] + f[_Y_]*fscale_N;
+    e[_Z_] = s[_Z_] + f[_Z_]*fscale_N;
+
+
     glColor4f (0.8,1.0,1.0,1.0);      
-    glBegin(GL_LINES);     
-    glVertex3d(0.0,0.0,0.0);       
-    glVertex3d(f[_X_]*fscale_N,
-	       f[_Y_]*fscale_N,
-	       f[_Z_]*fscale_N);  
-    glEnd();
+    drawArrow(s,e,arrow_width);
+
+    e[_X_] = s[_X_] + t[_X_]*fscale_Nm;
+    e[_Y_] = s[_Y_] + t[_Y_]*fscale_Nm;
+    e[_Z_] = s[_Z_] + t[_Z_]*fscale_Nm;
+
     
-    glColor4f (0.8,0.4,0.0,1.0);      
-    glBegin(GL_LINES);     
-    glVertex3d(0.0,0.0,0.0);       
-    glVertex3d(t[_X_]*fscale_Nm,
-	       t[_Y_]*fscale_Nm,
-	       t[_Z_]*fscale_Nm);  
-    glEnd();
-    
-    glEnable(GL_LIGHTING);   
-    glLineWidth(1.0);
-    
+    glColor4f (0.8,0.4,0.0,1.0);
+    drawArrow(s,e,arrow_width);
+
     glPopMatrix();
 
   }
