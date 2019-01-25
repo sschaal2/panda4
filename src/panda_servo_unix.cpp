@@ -75,6 +75,7 @@ static double          raw_torques[N_DOFS+1];
 static double          raw_desired_torques[N_DOFS+1];
 static double          raw_misc_sensors[N_MISC_SENSORS+1];
 static SL_Jstate       last_joint_sim_state[N_DOFS+1];
+static double          u_grav[N_DOFS+1];
 
 static int             panda_servo_errors = 0;
 static double          panda_servo_time   = 0;
@@ -201,6 +202,11 @@ main(int argc, char**argv)
 
       // all processing is done in a separate function
       std::array<double, 7> tau_d;
+
+      // computer gravity torques to inform the motor servo about the total command
+      std::array<double, 7> u_gravity = model.gravity(state);
+      for (size_t i = 0; i < 7; ++i)
+	u_grav[i+1] = u_gravity[i];
 
       if (! run_panda_servo() ) {
 
@@ -417,11 +423,16 @@ run_panda_servo(void)
   // translate the raw values to units
   for (i=1; i<=N_DOFS; ++i)
     last_joint_sim_state[i] = joint_sim_state[i];
+
   translate_sensor_readings(joint_sim_state);
+
+  for (i=1; i<=N_DOFS; ++i)
+    joint_sim_state[i].uff  += u_grav[i];
+
   if (real_time_dt > 0) {
     for (i=1; i<=N_DOFS; ++i)
       joint_sim_state[i].thdd = (joint_sim_state[i].thd - last_joint_sim_state[i].thd)/
-	(double)real_time_dt;
+	((double)real_time_dt/1000.0); // real_time_dt is in milliseconds
   }
   translate_misc_sensor_readings(misc_sim_sensor);
 
@@ -722,8 +733,10 @@ receive_des_commands(void)
 
   } 
 
-  for (i=1; i<=n_dofs; ++i)
-    joint_sim_state[i].u = (double) sm_des_commands->des_command[i].u;
+  for (i=1; i<=n_dofs; ++i) {
+    joint_sim_state[i].u  = (double) sm_des_commands->des_command[i].u;
+    joint_sim_state[i].uff = (double) sm_des_commands->des_command[i].uff;
+  }
   
   semGive(sm_des_commands_sem);
 

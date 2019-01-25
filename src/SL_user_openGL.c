@@ -45,6 +45,7 @@ int print_Hmat = FALSE;
 // local functions
 static int createWindows(void);
 static void myDrawGLElement(int num, double length, int flag);
+static void drawForceTorqueSensor(void);
 
 // global functions
 void display(void);
@@ -230,6 +231,10 @@ display(void)
 
   // the standard display functions for openGL
 #include "SL_user_display_core.h"
+
+    // draw force/torque sensor
+  drawForceTorqueSensor();
+
 
 }
 
@@ -450,4 +455,75 @@ idle(void)
   }
 
 }
+
+/*!*****************************************************************************
+ *******************************************************************************
+\note  drawForceTorqueSensor
+\date  Jan. 2011
+   
+\remarks 
+
+visualizes the force and torque vector at the wrist
+
+*******************************************************************************
+Function Parameters: [in]=input,[out]=output
+
+none
+
+ ******************************************************************************/
+static void
+drawForceTorqueSensor(void)
+{
+  int i,j,n;
+  double f[N_CART+1];
+  double t[N_CART+1];
+  double fscale_N=0.05;
+  double fscale_Nm=0.05;
+
+  for (n=1; n<=N_ENDEFFS; ++n) {
+    
+    // rotate the force torque info to world coordinates
+    for (i=1; i<=N_CART; ++i) {
+      f[i] = 0;
+      t[i] = 0;
+      for (j=1; j<=N_CART; ++j) {
+	f[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[C_FX-1+j];
+	t[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[C_MX-1+j];
+      }
+    }
+    
+    glPushMatrix();
+    
+    // move to the force torque sensor
+    glTranslated(link_pos_sim[FLANGE][_X_],link_pos_sim[FLANGE][_Y_],link_pos_sim[FLANGE][_Z_]);
+    
+    glLineWidth(4.0);
+    
+    // draw the force and torque vector
+    glDisable(GL_LIGHTING); //to have constant colors 
+    
+    glColor4f (0.8,1.0,1.0,1.0);      
+    glBegin(GL_LINES);     
+    glVertex3d(0.0,0.0,0.0);       
+    glVertex3d(f[_X_]*fscale_N,
+	       f[_Y_]*fscale_N,
+	       f[_Z_]*fscale_N);  
+    glEnd();
+    
+    glColor4f (0.8,0.4,0.0,1.0);      
+    glBegin(GL_LINES);     
+    glVertex3d(0.0,0.0,0.0);       
+    glVertex3d(t[_X_]*fscale_Nm,
+	       t[_Y_]*fscale_Nm,
+	       t[_Z_]*fscale_Nm);  
+    glEnd();
+    
+    glEnable(GL_LIGHTING);   
+    glLineWidth(1.0);
+    
+    glPopMatrix();
+
+  }
+}
+
 

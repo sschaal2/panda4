@@ -31,6 +31,7 @@
 #define TIME_OUT_NS  1000000000
 
 // local variables
+static double uff_complete[N_DOFS+1];
 
 // external variables
 extern int           motor_servo_errors;
@@ -101,7 +102,15 @@ read_user_sensors(SL_Jstate *raw,double *misc_raw)
     raw[i].th   = joint_sim_state[i].th;
     raw[i].thd  = joint_sim_state[i].thd;
     raw[i].thdd = joint_sim_state[i].thdd;
-    raw[i].load = joint_sim_state[i].u;
+    if (real_robot_flag) { 
+      // get load from Panda
+      raw[i].load = joint_sim_state[i].load;
+      // the panda_servo returns the uff+gravity
+      uff_complete[i] = joint_sim_state[i].uff;
+    } else {
+      // just pretend load = command
+      raw[i].load = joint_sim_state[i].u;
+    }
   }
 
   for (i=1; i<=N_MISC_SENSORS; ++i)
@@ -136,6 +145,12 @@ send_user_commands(SL_Jstate *command)
 
   // send commands to simulation
   send_des_command();
+
+  // after sending the command, correct it to include gravity
+  // (uff has been corrected before to include gravity)
+
+  for (i=1; i<=N_DOFS; ++i)
+    command[i].u = command[i].uff+command[i].ufb;
 
   return TRUE;
 }
@@ -316,9 +331,16 @@ user_controller(double *u, double *ufb, double *uff)
       uff[i] += js_des_local[i].uff;
       //printf("%d.%f\n",i,js_des_local[i].uff);
     }
-  }
 
-  
+  } else {  // for the real robot update the uff from panda; this is one tickdelayed info
+
+    for (i=1; i<=N_DOFS; ++i) {
+      uff[i] = uff_complete[i];
+    }
+    
+  }
+       
+
 }
 
 /*!*****************************************************************************
