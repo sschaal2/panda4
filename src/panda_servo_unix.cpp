@@ -39,6 +39,7 @@
 #include "SL_man.h"
 #include "SL_collect_data.h"
 #include "SL_shared_memory.h"
+#include "SL_dynamics.h"
 
 // panda includes
 #include <franka/duration.h>
@@ -190,12 +191,13 @@ main(int argc, char**argv)
 	raw_torques[i+1]    = state.tau_J[i];
       }
 
-      raw_misc_sensors[C_FX] = state.K_F_ext_hat_K[0];
-      raw_misc_sensors[C_FY] = state.K_F_ext_hat_K[1];
-      raw_misc_sensors[C_FZ] = state.K_F_ext_hat_K[2];
-      raw_misc_sensors[C_MX] = state.K_F_ext_hat_K[3];
-      raw_misc_sensors[C_MY] = state.K_F_ext_hat_K[4];
-      raw_misc_sensors[C_MZ] = state.K_F_ext_hat_K[5];
+      // change sign of the readings as we seemingly get the force/torque to robot applies
+      raw_misc_sensors[C_FX] = -state.K_F_ext_hat_K[0];
+      raw_misc_sensors[C_FY] = -state.K_F_ext_hat_K[1];
+      raw_misc_sensors[C_FZ] = -state.K_F_ext_hat_K[2];
+      raw_misc_sensors[C_MX] = -state.K_F_ext_hat_K[3];
+      raw_misc_sensors[C_MY] = -state.K_F_ext_hat_K[4];
+      raw_misc_sensors[C_MZ] = -state.K_F_ext_hat_K[5];
 
       // check the timing: number of milliseconds the servo loop ran: should be 1 for perfect behavior
       real_time_dt = period.toMSec();
@@ -298,6 +300,13 @@ init_panda_servo(franka::Robot &robot)
   if (!init_translation())
     return FALSE;
 
+  // read link parameters
+  if (!read_link_parameters(config_files[LINKPARAMETERS]))
+    return FALSE;
+
+  // the the default endeffector parameters
+  setDefaultEndeffector();
+
   // initialize the base variables
   bzero((void *)&base_state,sizeof(base_state));
   bzero((void *)&base_orient,sizeof(base_orient));
@@ -379,7 +388,7 @@ init_panda_servo(franka::Robot &robot)
   }
 
   for (i=1; i<=N_CART; ++i)
-    offset_homogeneous_matrix[count++] = endeff[FLANGE].x[i];
+    offset_homogeneous_matrix[count++] = endeff[HAND].x[i];
 
   offset_homogeneous_matrix[count++] = 1.0;
 
