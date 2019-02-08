@@ -38,6 +38,8 @@
 
 #define FL    0.107
 
+#define FINGER_OFF 0.0584
+
 // links of the robot
 enum RobotLinks {
   J2_LINK = 1,
@@ -100,6 +102,8 @@ enum RobotMiscSensors {
   C_MX,           //!< computed load cell moment in x
   C_MY,           //!< computed load cell moment in y
   C_MZ,           //!< computed load cell moment in z
+
+  G_WIDTH,        //!< gripper width
   
   N_ROBOT_MISC_SENSORS
 };

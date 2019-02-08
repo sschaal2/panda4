@@ -47,9 +47,11 @@
 #include <franka/model.h>
 #include <franka/rate_limiting.h>
 #include <franka/robot.h>
+#include <franka/gripper.h>
 
 #define TRANSLATION_FILE "Translation.cf"
 #define TIME_OUT_NS  NO_WAIT
+
 
 // global variables
 int servo_enabled;
@@ -86,6 +88,31 @@ static double          panda_time_overrun = 0;
 
 static double          real_time_dt = 0;
 
+static pthread_t       cthread;   // thread for gripper read state
+static pthread_t       ethread;   // thread for gripper execute
+
+static char            ip_string[20]; // ip of franka robot
+
+
+enum GripperTasks {
+  MOVE,
+  GRASP,
+  READ_STATE,
+};
+
+static int             run_gripper_thread_flag = FALSE;
+static int             gripper_task=READ_STATE;
+
+static double          width,speed,force,eps_in,eps_out; //grasp parameters
+
+enum CollectData {
+  COLLECT_NONE=0,
+  COLLECT_RANDOM,
+  COLLECT_SYSTEMATIC,
+};
+
+static int collect_data = COLLECT_NONE;
+
 // global functions
 
 
@@ -109,6 +136,14 @@ static void read_sensor_offs(void);
 
 static void generate_data_dynamics_param(franka::Model &model);
 
+static void compute_ft_offsets(void);
+
+static void spawnGripperThread(void);
+static void *gripperThread(void *);
+
+static int  checkForMessages(void);
+
+
 
 /*!*****************************************************************************
  *******************************************************************************
@@ -129,7 +164,6 @@ int
 main(int argc, char**argv)
 {
   int  i,j;
-  char ip_string[20];
 
   sprintf(servo_name,"panda");
 
@@ -160,6 +194,19 @@ main(int argc, char**argv)
     }
   }
 
+  // check for data collection flag
+  for (i=1; i<argc; ++i) {
+    if (strcmp(argv[i],"-cdr")==0) {
+      collect_data = COLLECT_RANDOM;
+      break;
+    }
+    if (strcmp(argv[i],"-cds")==0) {
+      collect_data = COLLECT_SYSTEMATIC;
+      break;
+    }
+  }
+
+
   // adjust settings if SL runs for a real robot
   setRealRobotOptions();
 
@@ -169,12 +216,18 @@ main(int argc, char**argv)
   // spawn command line interface thread
   spawnCommandLineThread(NULL);
 
+  // spawn gripper thread
+  spawnGripperThread();
+
   // initialize Panda robot
   try {
-    franka::Robot robot(ip_string);
+    franka::Robot   robot(ip_string);
 
     // Load the kinematics and dynamics model and keep it accessible in the scope of this file
     franka::Model model = robot.loadModel();
+
+    // turn on auto recovery
+    robot.automaticErrorRecovery();
 
     // Define callback for the joint torque control loop.
     std::function<franka::Torques(const franka::RobotState&, franka::Duration)> panda_callback = 
@@ -235,7 +288,11 @@ main(int argc, char**argv)
     if (!init_panda_servo(robot))
       return FALSE;
 
-    //    generate_data_dynamics_param(model);
+    // if data collection, exist right afterwards
+    if (collect_data) {
+      generate_data_dynamics_param(model);
+      return TRUE;
+    }
 
     // Start real-time control with the callback without rate limitter and no cutoff
     servo_enabled = TRUE;
@@ -344,6 +401,8 @@ init_panda_servo(franka::Robot &robot)
   // man pages
   addToMan("status","displays status information about servo",status);
   addToMan("readSensorOffsets","re-reads the sensor-offsets file",read_sensor_offs);
+  addToMan("calibrate_cFT","re-reads the sensor-offsets file",compute_ft_offsets);
+  
   
   // data collection
   initCollectData(servo_base_rate);
@@ -459,6 +518,9 @@ run_panda_servo(void)
 
   // translate commands to raw
   translate_commands(joint_sim_state);
+
+  // check for messages
+  checkForMessages();
 
   // data collection
   writeToBuffer();
@@ -945,8 +1007,7 @@ generate_data_dynamics_param(franka::Model &model)
   std::array<double, 7> gravity;
   std::array<double, 49> mass;
   const int big=1000000;
-  
-  int count=0,temp;
+    int count=0,temp;
 
   /*
   for (int i=0; i<7; ++i) {
@@ -971,9 +1032,10 @@ generate_data_dynamics_param(franka::Model &model)
       else
 	joint_sim_state[i].th = joint_range[i][MIN_THETA] + 0.03;
 
-      joint_sim_state[i].th = (double)(random_number((long int) ((joint_range[i][MAX_THETA] - 0.03)*big),
-						     (long int) ((joint_range[i][MIN_THETA] + 0.03)*big)))/
-	(double)big;   
+      if (collect_data == COLLECT_RANDOM)
+	joint_sim_state[i].th = (double)(random_number((long int) ((joint_range[i][MAX_THETA] - 0.03)*big),
+						       (long int) ((joint_range[i][MIN_THETA] + 0.03)*big)))/
+	  (double)big;   
 
       state.q[i-1] = joint_sim_state[i].th;
       temp = temp >> 1;
@@ -985,9 +1047,10 @@ generate_data_dynamics_param(franka::Model &model)
       else
 	joint_sim_state[i].thd = -franka::kMaxJointVelocity[i-1];
 
-      joint_sim_state[i].thd = (double)(random_number((long int) (franka::kMaxJointVelocity[i-1]*big),
-						     (long int) (-franka::kMaxJointVelocity[i-1]*big)))/
-	(double)big;   
+      if (collect_data == COLLECT_RANDOM)
+	joint_sim_state[i].thd = (double)(random_number((long int) (franka::kMaxJointVelocity[i-1]*big),
+							(long int) (-franka::kMaxJointVelocity[i-1]*big)))/
+	  (double)big;   
 
 
       state.dq[i-1] = joint_sim_state[i].thd;      
@@ -1000,9 +1063,10 @@ generate_data_dynamics_param(franka::Model &model)
       else
 	joint_sim_state[i].thdd = -franka::kMaxJointAcceleration[i-1];
 
-      joint_sim_state[i].thdd = (double)(random_number((long int) (franka::kMaxJointAcceleration[i-1]*big),
-						     (long int) (-franka::kMaxJointAcceleration[i-1]*big)))/
-	(double)big;   
+      if (collect_data == COLLECT_RANDOM)
+	joint_sim_state[i].thdd = (double)(random_number((long int) (franka::kMaxJointAcceleration[i-1]*big),
+							 (long int) (-franka::kMaxJointAcceleration[i-1]*big)))/
+	  (double)big;   
 
       state.ddq_d[i-1] = joint_sim_state[i].thdd;      
       temp = temp >> 1;
@@ -1031,5 +1095,242 @@ generate_data_dynamics_param(franka::Model &model)
   changeSamplingTime( 5.0);
 
   
+}
+
+/*!*****************************************************************************
+ *******************************************************************************
+\note  compute_ft_offsets
+\date  Jan 2019
+   
+\remarks 
+
+ computes an average offset of the computer F/T sensor of Panda
+
+ *******************************************************************************
+ Function Parameters: [in]=input,[out]=output
+
+     none
+
+ ******************************************************************************/
+static void
+compute_ft_offsets(void)
+{
+
+  double data[2*N_CART+1]={0,0,0,0,0,0,0};
+  int    count=100;
+  int    i,j;
+  long   last_panda_servo_calls = panda_servo_calls;
+
+  
+  for (i=1; i<= count; ++i) {
+    
+    while (last_panda_servo_calls == panda_servo_calls) {
+      taskDelay(ns2ticks(10000000)); // wait 10ms
+    }
+    last_panda_servo_calls = panda_servo_calls;
+
+    for (j=1; j<=2*N_CART; ++j)
+      data[j] += raw_misc_sensors[C_FX-1+j];
+    
+  }
+
+  for (j=1; j<=2*N_CART; ++j)
+    misc_trans_sensors[C_FX-1+j].offset = -data[j]/(double)count;
+
+  
+}
+
+/*!*****************************************************************************
+*******************************************************************************
+\note  spawnGripperThread
+\date  Feb 2019
+ 
+\remarks 
+ 
+spawns off a thread to do non-real-time communication with gripper
+ 
+*******************************************************************************
+Function Parameters: [in]=input,[out]=output
+ 
+none
+ 
+******************************************************************************/
+static void
+spawnGripperThread(void) 
+{
+  int err = 0;
+  int rc;
+  pthread_attr_t pth_attr;
+  size_t stack_size = 0;
+
+  err = pthread_attr_init(&pth_attr);
+  pthread_attr_getstacksize(&pth_attr, &stack_size);
+  double reqd = 1024*1024*8;
+  if (stack_size < reqd)
+    pthread_attr_setstacksize(&pth_attr, reqd);
+
+  /* initialize a thread for the user command interface */
+  run_gripper_thread_flag = TRUE;
+  if ((rc=pthread_create( &cthread, &pth_attr, gripperThread, NULL)))
+      printf("pthread_create returned with %d\n",rc);
+
+}
+
+/*!*****************************************************************************
+*******************************************************************************
+\note  gripperThread
+\date  Feb 2019
+ 
+\remarks 
+ 
+non-realtime thread for gripper communication
+ 
+*******************************************************************************
+Function Parameters: [in]=input,[out]=output
+ 
+none
+ 
+******************************************************************************/
+static void *
+gripperThread(void *) 
+{
+  long   last_panda_servo_calls = panda_servo_calls;
+
+  try {
+
+    franka::Gripper gripper(ip_string);
+
+    while (run_gripper_thread_flag) {
+
+      
+      while (last_panda_servo_calls == panda_servo_calls) {
+	taskDelay(ns2ticks(10000000)); // wait 10ms
+      }
+      last_panda_servo_calls = panda_servo_calls;
+      
+      switch (gripper_task) {
+
+      case MOVE:
+	gripper.move(width,speed);
+	gripper_task = READ_STATE;
+	break;
+	
+      case GRASP:
+	gripper.grasp(width,speed,force,eps_in,eps_out);
+	gripper_task = READ_STATE;
+	break;
+	
+      case READ_STATE:
+      default: // read the gripper state
+	franka::GripperState gripper_state = gripper.readOnce();
+	raw_misc_sensors[G_WIDTH] = gripper_state.width;
+
+      }
+
+    }
+
+  } catch (const franka::Exception& ex) {
+
+    std::cerr << "gripperThread:" << std::endl;
+    std::cerr << ex.what() << std::endl;
+    std::cout << "Press Enter to continue..." << std::endl;
+    std::cin.ignore();
+    
+  }
+
+  return NULL;
+  
+}
+
+/*!*****************************************************************************
+ *******************************************************************************
+\note  checkForMessages
+\date  Feb 2019
+   
+\remarks 
+
+      Messages can be given to the servo for hard-coded tasks.This allows
+      some information passing between the different processes on variables
+      of common interest, e.g., the endeffector specs, object information,
+      etc.
+
+ *******************************************************************************
+ Function Parameters: [in]=input,[out]=output
+
+   none
+
+ ******************************************************************************/
+static int
+checkForMessages(void)
+{
+  int i,j,k;
+  char name[20];
+
+  // check whether a message is available
+  if (semTake(sm_simulation_message_ready_sem,NO_WAIT) == ERROR) {
+    return FALSE;
+  }
+
+  // receive the message
+  if (semTake(sm_simulation_message_sem,ns2ticks(TIME_OUT_NS)) == ERROR) {
+    printf("Couldn't take simulation message semaphore\n");
+    return FALSE;
+  }
+
+
+  for (k=1; k<=sm_simulation_message->n_msgs; ++k) {
+
+    // get the name of this message
+    strcpy(name,sm_simulation_message->name[k]);
+
+    // act according to the message name
+
+    // -------------------------------------------------------------------------
+    if (strcmp(name,"graspGripper") == 0) { // trigger a grasp movement
+      float  buf[5+1];
+      
+      memcpy(&(buf[1]),sm_simulation_message->buf+sm_simulation_message->moff[k],
+	     sizeof(float)*(5));
+      j = 0;
+      width   = buf[++j];
+      speed   = buf[++j];
+      force   = buf[++j];
+      eps_in  = buf[++j];
+      eps_out = buf[++j];
+
+      gripper_task = GRASP;
+
+      
+    // -------------------------------------------------------------------------
+    } else if (strcmp(name,"moveGripper") == 0) { // trigger a gripper movement
+      float  buf[2+1];
+      
+      memcpy(&(buf[1]),sm_simulation_message->buf+sm_simulation_message->moff[k],
+	     sizeof(float)*(2));
+      j = 0;
+      width   = buf[++j];
+      speed   = buf[++j];
+
+      gripper_task = MOVE;
+
+      
+    // ---------------------------------------------------------------------------
+    } else if (strcmp(name,"status") == 0) { 
+      
+      status();
+      
+    }
+    // ---------------------------------------------------------------------------
+    
+    
+  }
+
+  // give back semaphore
+  sm_simulation_message->n_msgs = 0;
+  sm_simulation_message->n_bytes_used = 0;
+  semGive(sm_simulation_message_sem);
+
+
+  return TRUE;
 }
 

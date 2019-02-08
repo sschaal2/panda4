@@ -148,6 +148,7 @@ main(int argc, char**argv)
   }
 
   // monitor dying child process and kill all other if this happens
+  printf("%d\n",parent_process_id);
   waitpid(0,&stat_loc,options);
 
   return TRUE;

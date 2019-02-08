@@ -67,7 +67,8 @@ char misc_sensor_names[][20] = {
   {"C_FZ"}, 
   {"C_MX"}, 
   {"C_MY"}, 
-  {"C_MZ"}, 
+  {"C_MZ"},
+  {"G_WIDTH"}, 
 
 };
 

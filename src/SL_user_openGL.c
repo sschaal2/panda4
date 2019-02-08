@@ -262,7 +262,7 @@ myDrawGLElement(int num, double length, int flag)
 {
 		
   static int firsttime = TRUE;
-  static int link0,link1,link2,link3,link4,link5,link6,link7;
+  static int link0,link1,link2,link3,link4,link5,link6,link7,hand,finger;
 
   GLfloat  gray[4]={(float)0.8,(float)0.8,(float)0.8,(float)1.0};
   GLfloat  green[4]={(float)0.1,(float)0.5,(float)0.5,(float)1.0};
@@ -313,6 +313,12 @@ myDrawGLElement(int num, double length, int flag)
 
     sprintf(fname,"%s/panda/3D/link7.obj",lab_root);
     link7 = displayListFromObjFile(fname,1.);
+
+    sprintf(fname,"%s/panda/3D/hand.obj",lab_root);
+    hand = displayListFromObjFile(fname,1.);
+
+    sprintf(fname,"%s/panda/3D/finger.obj",lab_root);
+    finger = displayListFromObjFile(fname,1.);
 
   }
 
@@ -394,12 +400,23 @@ myDrawGLElement(int num, double length, int flag)
     glCallList(link6);
     break;
 
-  case 108: 
+  case 108:
+    glPushMatrix();
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
     glColor4fv(gray);
     glRotated((GLdouble)90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
     glCallList(link7);
-    break;
+    glTranslated(0.0,FL,0.0);
+    glRotated((GLdouble)-45.,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);
+    glCallList(hand);
+    glTranslated(0.0,FINGER_OFF,0.0);
+    glTranslated(0.0,0.0,-misc_sim_sensor[G_WIDTH]/2.);
+    glCallList(finger);
+    glRotated((GLdouble)180.,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);
+    glTranslated(0.0,0.0,-misc_sim_sensor[G_WIDTH]);
+    glCallList(finger);
+    //break;  // intentionally no break in order to visualize the endeffector
+    glPopMatrix();
 
   default:
 
