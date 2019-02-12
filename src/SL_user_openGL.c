@@ -415,8 +415,18 @@ myDrawGLElement(int num, double length, int flag)
     glRotated((GLdouble)180.,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);
     glTranslated(0.0,0.0,-misc_sim_sensor[G_WIDTH]);
     glCallList(finger);
-    //break;  // intentionally no break in order to visualize the endeffector
     glPopMatrix();
+
+    // draw little rod to show the endeffector position
+    glScaled(width/5.,width/5.,length);
+    glColor4fv(gray);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
+    if (solid)
+      glutSolidCylinder(1.0,1.0,isphere,1);
+    else
+      glutWireCylinder(1.0,1.0,isphere,1);
+
+    break;
 
   default:
 

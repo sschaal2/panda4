@@ -39,6 +39,7 @@
 #define FL    0.107
 
 #define FINGER_OFF 0.0584
+#define FINGER_LENGTH 0.045
 
 // links of the robot
 enum RobotLinks {
