@@ -113,7 +113,7 @@ enum CollectData {
 
 // model parameters from Franka model library
 static  std::array<double, 7> coriolis;
-static  std::array<double, 7> gravity;
+static  std::array<double, 7> u_gravity;
 static  std::array<double, 49> mass;
 
 static int collect_data = COLLECT_NONE;
@@ -267,12 +267,12 @@ main(int argc, char**argv)
       // and compute other dyn parameters for print out. Only gravity is really needed
       // while coriolis and mass matrix are just for debugging
       
-      gravity = model.gravity(state); // default gravity is -9.81 in Z
+      u_gravity = model.gravity(state); // default gravity is -9.81 in Z
       coriolis = model.coriolis(state);
       mass = model.mass(state);
 
       for (size_t i = 0; i < 7; ++i)
-	u_grav[i+1] = gravity[i];
+	u_grav[i+1] = u_gravity[i];
 
 
       if (! run_panda_servo() ) {
@@ -1083,12 +1083,12 @@ generate_data_dynamics_param(franka::Model &model)
     }
 
     // compute the dynamics from these values in state
-    gravity = model.gravity(state); // default gravity is -9.81 in Z
+    u_gravity = model.gravity(state); // default gravity is -9.81 in Z
     coriolis = model.coriolis(state);
     mass = model.mass(state);
 
     for (int i=J1; i<=J7; ++i ) {
-      joint_sim_state[i].u = gravity[i-1] + coriolis[i-1];
+      joint_sim_state[i].u = u_gravity[i-1] + coriolis[i-1];
       for (int j=J1; j<=J7; ++j) {
 	joint_sim_state[i].u += mass[i-1 + (j-1)*7]*state.ddq_d[j-1];
       }
@@ -1382,7 +1382,7 @@ printDyn(void)
 
   printf("RBD Gravity Vector:\n");
   for (i=1; i<=N_DOFS; ++i) {
-    printf("%7.4f ",gravity[i-1]);
+    printf("%7.4f ",u_gravity[i-1]);
   }
   printf("\n");
   printf("\n");
