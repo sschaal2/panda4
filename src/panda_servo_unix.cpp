@@ -111,10 +111,14 @@ enum CollectData {
   COLLECT_SYSTEMATIC,
 };
 
+// model parameters from Franka model library
+static  std::array<double, 7> coriolis;
+static  std::array<double, 7> gravity;
+static  std::array<double, 49> mass;
+
 static int collect_data = COLLECT_NONE;
 
 // global functions
-
 
 
 // local functions
@@ -137,6 +141,7 @@ static void read_sensor_offs(void);
 static void generate_data_dynamics_param(franka::Model &model);
 
 static void compute_ft_offsets(void);
+static void printDyn(void);
 
 static void spawnGripperThread(void);
 static void *gripperThread(void *);
@@ -259,9 +264,16 @@ main(int argc, char**argv)
       std::array<double, 7> tau_d;
 
       // computer gravity torques to inform the motor servo about the total command
-      std::array<double, 7> u_gravity = model.gravity(state);
+      // and compute other dyn parameters for print out. Only gravity is really needed
+      // while coriolis and mass matrix are just for debugging
+      
+      gravity = model.gravity(state); // default gravity is -9.81 in Z
+      coriolis = model.coriolis(state);
+      mass = model.mass(state);
+
       for (size_t i = 0; i < 7; ++i)
-	u_grav[i+1] = u_gravity[i];
+	u_grav[i+1] = gravity[i];
+
 
       if (! run_panda_servo() ) {
 
@@ -402,6 +414,7 @@ init_panda_servo(franka::Robot &robot)
   addToMan("status","displays status information about servo",status);
   addToMan("readSensorOffsets","re-reads the sensor-offsets file",read_sensor_offs);
   addToMan("calibrate_cFT","re-reads the sensor-offsets file",compute_ft_offsets);
+  addToMan("printDyn","prints the dynamics parameters",printDyn);
   
   
   // data collection
@@ -1003,9 +1016,6 @@ static void
 generate_data_dynamics_param(franka::Model &model)
 {
   franka::RobotState state;
-  std::array<double, 7> coriolis;
-  std::array<double, 7> gravity;
-  std::array<double, 49> mass;
   const int big=1000000;
     int count=0,temp;
 
@@ -1334,3 +1344,47 @@ checkForMessages(void)
   return TRUE;
 }
 
+/*!*****************************************************************************
+ *******************************************************************************
+\note  printDyn
+\date  Jan 2019
+   
+\remarks 
+
+ prints the current dynamics parameters, i.e., inertia matrix, coriolis vector,
+ gravity vector
+
+ *******************************************************************************
+ Function Parameters: [in]=input,[out]=output
+
+     none
+
+ ******************************************************************************/
+static void
+printDyn(void)
+{
+  int    i,j;
+
+  printf("RBD Inertia Matrix:\n");
+  for (i=1; i<=N_DOFS; ++i) {
+    for (j=1; j<=N_DOFS; ++j) {
+      printf("%7.4f ",mass[(j-1)*N_DOFS+i-1]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+
+  printf("RBD Coriolis Vector:\n");
+  for (i=1; i<=N_DOFS; ++i) {
+    printf("%7.4f ",coriolis[i-1]);
+  }
+  printf("\n");
+
+  printf("RBD Gravity Vector:\n");
+  for (i=1; i<=N_DOFS; ++i) {
+    printf("%7.4f ",gravity[i-1]);
+  }
+  printf("\n");
+  printf("\n");
+
+}

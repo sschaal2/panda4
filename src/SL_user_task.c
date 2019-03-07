@@ -34,6 +34,7 @@
 // local functions
 static void grasp(void);
 static void move(void);
+static void printDyn(void);
 
 // external functions
 
@@ -87,7 +88,8 @@ run_user_task(void)
 
   addToMan("move","executes a gripper move manually",move); 
   addToMan("grasp","executes a gripper grasp manually",grasp);
-
+  addToMan("printDyn","prints the dynamics parameters",printDyn);
+  
   return TRUE;
 }
 
@@ -259,5 +261,59 @@ move(void)
 
   sendGripperMoveCommand( width,  speed);
 
+
+}
+
+/*!*****************************************************************************
+ *******************************************************************************
+\note  printDyn
+\date  Jan 2019
+   
+\remarks 
+
+ prints the current dynamics parameters, i.e., inertia matrix, coriolis vector,
+ gravity vector
+
+ *******************************************************************************
+ Function Parameters: [in]=input,[out]=output
+
+     none
+
+ ******************************************************************************/
+static void
+printDyn(void)
+{
+  int    i,j;
+  static int firsttime = TRUE;
+  static Matrix rbdM;
+  static Vector rbdCG;
+  SL_uext ux[N_DOFS+1];
+
+  if (firsttime) {
+    firsttime = FALSE;
+    
+    rbdM  = my_matrix(1,N_DOFS+2*N_CART,1,N_DOFS+2*N_CART);
+    rbdCG = my_vector(1,N_DOFS+2*N_CART);
+    bzero((void *)&ux,sizeof(ux));
+
+  }
+  
+  SL_ForDynComp(joint_state,&base_state,&base_orient,ux,endeff,rbdM,rbdCG);
+
+  printf("RBD Inertia Matrix:\n");
+  for (i=1; i<=N_DOFS; ++i) {
+    for (j=1; j<=N_DOFS; ++j) {
+      printf("%7.4f ",rbdM[i][j]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+
+  printf("RBD Coriolis+Gravity Vector:\n");
+  for (i=1; i<=N_DOFS; ++i) {
+    printf("%7.4f ",rbdCG[i]);
+  }
+  printf("\n");
+  printf("\n");
 
 }
