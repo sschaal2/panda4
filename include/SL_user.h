@@ -158,6 +158,9 @@ extern "C" {
 #endif
 
   // function prototype
+  void sendGripperGraspCommand(double width, double speed, double force,
+			       double eps_in, double eps_out) ;
+  void sendGripperMoveCommand(double width, double speed);
 
   // external variables
 
