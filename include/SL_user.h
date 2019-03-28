@@ -163,7 +163,9 @@ extern "C" {
 			       double eps_in, double eps_out) ;
   void sendGripperMoveCommand(double width, double speed);
 
-  // external variables
+  void sendCalibrateFTCommand(void);
+
+// external variables
 
 #ifdef __cplusplus
 }

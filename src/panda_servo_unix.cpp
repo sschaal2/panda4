@@ -413,7 +413,7 @@ init_panda_servo(franka::Robot &robot)
   // man pages
   addToMan("status","displays status information about servo",status);
   addToMan("readSensorOffsets","re-reads the sensor-offsets file",read_sensor_offs);
-  addToMan("calibrate_cFT","re-reads the sensor-offsets file",compute_ft_offsets);
+  addToMan("calibrate_cFT","calibrates the computed FT offsets",compute_ft_offsets);
   addToMan("printDyn","prints the dynamics parameters",printDyn);
   
   
@@ -1327,6 +1327,11 @@ checkForMessages(void)
 
       gripper_task = MOVE;
 
+      
+    // ---------------------------------------------------------------------------
+    } else if (strcmp(name,"calibrateFT") == 0) { 
+
+      sendCommandLineCmd("calibrate_cFT");
       
     // ---------------------------------------------------------------------------
     } else if (strcmp(name,"status") == 0) { 

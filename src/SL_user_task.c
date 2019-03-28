@@ -164,6 +164,31 @@ sendGripperMoveCommand(double width, double speed)
   sendMessageSimulationServo("moveGripper",(void *)cbuf,2*sizeof(float));
 
 }
+/*!*****************************************************************************
+ *******************************************************************************
+\note  sendCalibrateFTCommand
+\date  Feb 2019
+   
+\remarks 
+
+      tells the robot process to calibrate the FT offsets
+
+ *******************************************************************************
+ Function Parameters: [in]=input,[out]=output
+
+      none
+
+ ******************************************************************************/
+void 
+sendCalibrateFTCommand(void)
+{
+  int i,j;
+  int count = 0;
+  unsigned char cbuf[2*sizeof(float)];
+
+  sendMessageSimulationServo("calibrateFT",(void *)cbuf,0);
+
+}
 
 /*!*****************************************************************************
  *******************************************************************************
