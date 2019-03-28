@@ -28,6 +28,7 @@
 #include "utility_macros.h"
 #include "mdefs.h"
 #include "SL_dynamics.h"
+#include "SL_shared_memory.h"
 
 /* global variables */
 
@@ -104,13 +105,58 @@ run_user_simulation(void)
   return TRUE;
 }
 
+/*!*****************************************************************************
+ *******************************************************************************
+\note  userCheckForMessage
+\date  Feb. 2009
+   
+\remarks 
 
+          this function allows the user to intercept a message send to the
+          motor servo and use this information in sensor_user_proc
 
+ *******************************************************************************
+ Function Parameters: [in]=input,[out]=output
 
+ \param[in]     name : message identifying name
+ \param[in]     k    : index of message in shared memory
 
+ ******************************************************************************/
+void
+userCheckForMessage(char *name, int k)
+{
+  int i,j;
+  double width,speed,force,eps_in,eps_out; //grasp parameters
 
+  if (strcmp(name,"graspGripper") == 0) { // trigger a grasp movement
+    float  buf[5+1];
+    
+    memcpy(&(buf[1]),sm_simulation_message->buf+sm_simulation_message->moff[k],
+	   sizeof(float)*(5));
+      j = 0;
+      width   = buf[++j];
+      speed   = buf[++j];
+      force   = buf[++j];
+      eps_in  = buf[++j];
+      eps_out = buf[++j];
 
+      misc_sim_sensor[G_WIDTH] = width;
 
+      
+    // -------------------------------------------------------------------------
+    } else if (strcmp(name,"moveGripper") == 0) { // trigger a gripper movement
+      float  buf[2+1];
+      
+      memcpy(&(buf[1]),sm_simulation_message->buf+sm_simulation_message->moff[k],
+	     sizeof(float)*(2));
+      j = 0;
+      width   = buf[++j];
+      speed   = buf[++j];
 
+      misc_sim_sensor[G_WIDTH] = width;
 
+      
+    }
+    // ---------------------------------------------------------------------------
 
+}

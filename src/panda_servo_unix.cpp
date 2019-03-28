@@ -1179,7 +1179,7 @@ spawnGripperThread(void)
   if (stack_size < reqd)
     pthread_attr_setstacksize(&pth_attr, reqd);
 
-  /* initialize a thread for the user command interface */
+  // initialize a thread for blocking gripper commands
   run_gripper_thread_flag = TRUE;
   if ((rc=pthread_create( &cthread, &pth_attr, gripperThread, NULL)))
       printf("pthread_create returned with %d\n",rc);
@@ -1221,12 +1221,16 @@ gripperThread(void *)
       switch (gripper_task) {
 
       case MOVE:
+	raw_misc_sensors[G_MOTION] = TRUE;
 	gripper.move(width,speed);
+	raw_misc_sensors[G_MOTION] = FALSE;	
 	gripper_task = READ_STATE;
 	break;
 	
       case GRASP:
+	raw_misc_sensors[G_MOTION] = TRUE;	
 	gripper.grasp(width,speed,force,eps_in,eps_out);
+	raw_misc_sensors[G_MOTION] = FALSE;		
 	gripper_task = READ_STATE;
 	break;
 	

@@ -105,6 +105,7 @@ enum RobotMiscSensors {
   C_MZ,           //!< computed load cell moment in z
 
   G_WIDTH,        //!< gripper width
+  G_MOTION,       //!< gripper is moving: yes/no
   
   N_ROBOT_MISC_SENSORS
 };
