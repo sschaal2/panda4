@@ -418,13 +418,16 @@ myDrawGLElement(int num, double length, int flag)
     glPopMatrix();
 
     // draw little rod to show the endeffector position
-    glScaled(width/5.,width/5.,length);
+    glRotated((GLdouble)-45.,(GLdouble)0.,(GLdouble)0.,(GLdouble)1.);
+    glTranslated(0.0,0.0,length/2.);
+    glScaled(0.02,0.01,length);
     glColor4fv(gray);
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
+
     if (solid)
-      glutSolidCylinder(1.0,1.0,isphere,1);
+      glutSolidCube(1.0);
     else
-      glutWireCylinder(1.0,1.0,isphere,1);
+      glutWireCube(1.0);
 
     break;
 

@@ -114,7 +114,7 @@ setDefaultEndeffector(void) {
     endeff[i].x[_Z_]  = FL+FINGER_OFF+FINGER_LENGTH; 
     endeff[i].a[_A_]  = 0.0;
     endeff[i].a[_B_]  = 0.0;
-    endeff[i].a[_G_]  = 0.0;
+    endeff[i].a[_G_]  = 3.*PI/4.;
   }
 
 }
