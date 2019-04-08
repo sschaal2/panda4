@@ -268,7 +268,7 @@ grasp(void)
 static void 
 move(void)
 {
-  static double width=0.01;
+  static double width=0.05;
   static double speed=0.1;
   double aux;
 
