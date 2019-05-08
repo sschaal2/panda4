@@ -68,7 +68,7 @@ init_user_simulation(void)
 #include "LEKin_contact.h"
 
   // change numerical integration
-  n_integration = 1;
+  n_integration = 10;
   integrate_method = INTEGRATE_EULER;
 
   // change the freeze_base_pos[] array if needed
@@ -100,8 +100,64 @@ int
 run_user_simulation(void)
 
 {
-  int i,j;
+  int           i,j;
+  double        force_local[N_CART+1];
+  double        torque_local[N_CART+1];
+  double        force_world[N_CART+1];
+  double        torque_world[N_CART+1];
+  double        torque_correction[N_CART+1];
 
+
+  // simulate the computed F/T sensor of external forces. We can use the
+  // ucontact[J7] wrench info for this, which is in world coordinates.
+  // Transform into J7_LINK, which identical to J7 joint coordinates
+  
+  for (i=1; i<=N_CART; ++i) {
+    force_local[i] = torque_local[i] = 0;
+    for (j=1; j<=N_CART; ++j) {
+      force_local[i]  += Alink_sim[J7_LINK][j][i] * ucontact[J7].f[j];
+      torque_local[i] += Alink_sim[J7_LINK][j][i] * ucontact[J7].t[j];
+    }
+  }
+
+  
+  // this force/torque is slighly wrong: it needs to be at the endeffector coordinate
+  // system, and needs to take into account moments from translating from
+  // J7 to the endeffector FLANGE. Thus, the moments need to be corrected.
+  
+  vec_mult_outer_size(endeff[HAND].x, force_local, N_CART, torque_correction);
+  
+  for (i=1; i<=N_CART; ++i) {
+    torque_local[i] += torque_correction[i];
+  }
+
+  // the computed torque is reported in endeffector coordinates, i.e., we need to
+  // transform back into the world coordinate system ...
+
+  for (i=1; i<=N_CART; ++i) {
+    force_world[i] = torque_world[i] = 0;
+    for (j=1; j<=N_CART; ++j) {
+      force_world[i]  += Alink_sim[J7_LINK][i][j] * force_local[j];
+      torque_world[i] += Alink_sim[J7_LINK][i][j] * torque_local[j];
+    }
+  }
+
+  // ... and now to endeffector coordinates
+  for (i=1; i<=N_CART; ++i) {
+    force_local[i] = torque_local[i] = 0;
+    for (j=1; j<=N_CART; ++j) {
+      force_local[i]  += Alink_sim[FLANGE][j][i] * force_world[j];
+      torque_local[i] += Alink_sim[FLANGE][j][i] * torque_world[j];
+    }
+  }
+
+  for (i=1; i<=N_CART; ++i) {
+    misc_sim_sensor[C_FX-1+i] = force_local[i];
+    misc_sim_sensor[C_MX-1+i] = torque_local[i];
+  }
+  
+  
+  
   return TRUE;
 }
 
