@@ -93,6 +93,8 @@ static pthread_t       ethread;   // thread for gripper execute
 
 static char            ip_string[20]; // ip of franka robot
 
+static int             change_endeff_flag = FALSE;
+
 
 enum GripperTasks {
   MOVE,
@@ -147,6 +149,8 @@ static void spawnGripperThread(void);
 static void *gripperThread(void *);
 
 static int  checkForMessages(void);
+
+static int  set_stiffness_frame(franka::Robot &robot);
 
 
 
@@ -249,7 +253,7 @@ main(int argc, char**argv)
 	raw_torques[i+1]    = state.tau_J[i];
       }
 
-      // change sign of the readings as we seemingly get the force/torque to robot applies
+      // change sign of the readings as we seemingly get the force/torque the robot applies
       raw_misc_sensors[C_FX] = -state.K_F_ext_hat_K[0];
       raw_misc_sensors[C_FY] = -state.K_F_ext_hat_K[1];
       raw_misc_sensors[C_FZ] = -state.K_F_ext_hat_K[2];
@@ -441,12 +445,15 @@ init_panda_servo(franka::Robot &robot)
   robot.setCartesianImpedance({{3000, 3000, 3000, 300, 300, 300}});
 
   // set the stiffness frame of the robot to the endeffector frame
+  set_stiffness_frame(robot);
+
+#if 0
   std::array<double, 16> offset_homogeneous_matrix;
   offset_homogeneous_matrix.fill(0.0);
 
   // compute the rotation matrix of endeffector
   for (i=1; i<=N_CART; ++i)
-    v[i] = endeff[FLANGE].a[i];
+    v[i] = endeff[HAND].a[i];
 
   eulerToRotMat(v,R);
 
@@ -466,7 +473,8 @@ init_panda_servo(franka::Robot &robot)
 
   robot.setK(offset_homogeneous_matrix);
 
-
+#endif
+  
   printf("\nPanda initialized\n");
 
 
@@ -475,6 +483,58 @@ init_panda_servo(franka::Robot &robot)
 
 /*!*****************************************************************************
  *******************************************************************************
+\note  set_stiffness_frame
+\date  May 2019
+   
+\remarks 
+
+ Sets the stiffness coordinate from the current endeffector info
+
+ *******************************************************************************
+ Function Parameters: [in]=input,[out]=output
+
+ \param[in]     robot  : robot object of Panda
+
+ ******************************************************************************/
+static int
+set_stiffness_frame(franka::Robot &robot)
+{
+  int i,j, count;
+  MY_MATRIX(R,1,N_CART,1,N_CART);
+  MY_VECTOR(v,1,N_CART);
+
+  // set the stiffness frame of the robot to the endeffector frame
+  std::array<double, 16> offset_homogeneous_matrix;
+  offset_homogeneous_matrix.fill(0.0);
+
+  // compute the rotation matrix of endeffector
+  for (i=1; i<=N_CART; ++i)
+    v[i] = endeff[HAND].a[i];
+
+  eulerToRotMat(v,R);
+
+  // sort all into a homogenous transformation matrix in column-major format (Franka!)
+  count = 0;
+  for (i=1; i<=N_CART; ++i) {
+    for (j=1; j<=N_CART; ++j) {
+      offset_homogeneous_matrix[count++] = R[j][i];
+    }
+    offset_homogeneous_matrix[count++] = 0.0;
+  }
+
+  for (i=1; i<=N_CART; ++i)
+    offset_homogeneous_matrix[count++] = endeff[HAND].x[i];
+
+  offset_homogeneous_matrix[count++] = 1.0;
+
+  robot.setK(offset_homogeneous_matrix);
+
+  return TRUE;
+
+}
+
+/*!*****************************************************************************
+*******************************************************************************
 \note  run_panda_servo
 \date  Dec 2018
    
