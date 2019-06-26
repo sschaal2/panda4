@@ -76,11 +76,15 @@ main(int argc, char**argv)
   
   // the task servo
   if (fork() == 0) {
+    FILE *fp;
+    fp = fopen("mist","w");
     sprintf(argv_ptr[geometry_argv],"90x30+%d+640",display_width-delta_width);
     if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
 				   "task_servo_geometry", string))
       if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
 	strcpy(argv_ptr[geometry_argv],xstring);
+    fprintf(fp,"%s",xstring);
+    fclose(fp);
     sprintf(argv_ptr[background_argv],"PowderBlue");
     sprintf(argv_ptr[servo_argv],"xtask");
     execvp("xterm",argv_ptr);
@@ -104,11 +108,15 @@ main(int argc, char**argv)
 
   // the motor servo
   if (fork() == 0) {
+    FILE *fp;
+    fp = fopen("mist","w");
     sprintf(argv_ptr[geometry_argv],"90x12+%d+268",display_width-delta_width);
     if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
 				   "motor_servo_geometry", string))
       if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
 	strcpy(argv_ptr[geometry_argv],xstring);
+    fprintf(fp,"%s",xstring);
+    fclose(fp);
     sprintf(argv_ptr[background_argv],"thistle");
     sprintf(argv_ptr[servo_argv],"xmotor");
     execvp("xterm",argv_ptr);
@@ -119,11 +127,15 @@ main(int argc, char**argv)
   // the opengGL servo
   if (graphics_flag) {
     if (fork() == 0) {
+      FILE *fp;
+      fp = fopen("mist","w");
       sprintf(argv_ptr[geometry_argv],"90x8+%d+134",display_width-delta_width);
       if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
 				     "openGL_servo_geometry", string))
 	if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
 	  strcpy(argv_ptr[geometry_argv],xstring);
+      fprintf(fp,"%s",xstring);
+      fclose(fp);
       sprintf(argv_ptr[background_argv],"LightYellow");
       sprintf(argv_ptr[servo_argv],"xopengl");
       sprintf(argv_ptr[nice_argv],"19");
