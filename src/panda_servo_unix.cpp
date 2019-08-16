@@ -1195,7 +1195,7 @@ compute_ft_offsets(void)
   for (i=1; i<= count; ++i) {
     
     while (last_panda_servo_calls == panda_servo_calls) {
-      taskDelay(ns2ticks(10000000)); // wait 10ms
+      taskDelay(ns2ticks(1000000)); // wait 10ms
     }
     last_panda_servo_calls = panda_servo_calls;
 
