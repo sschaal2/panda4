@@ -75,6 +75,7 @@ static Translation     misc_trans_sensors[N_MISC_SENSORS+1];
 static double          raw_positions[N_DOFS+1];
 static double          raw_velocities[N_DOFS+1];
 static double          raw_torques[N_DOFS+1];
+static double          torque_offset[N_DOFS+1];
 static double          raw_desired_torques[N_DOFS+1];
 static double          raw_misc_sensors[N_MISC_SENSORS+1];
 static SL_Jstate       last_joint_sim_state[N_DOFS+1];
@@ -173,6 +174,8 @@ int
 main(int argc, char**argv)
 {
   int  i,j;
+  char string[100];
+  double aux;
 
   sprintf(servo_name,"panda");
 
@@ -215,6 +218,16 @@ main(int argc, char**argv)
     }
   }
 
+  // a bit of a hack: allow offset commands for all joints in case of a
+  // a load cell bias
+  for (i=1; i<=N_DOFS; ++i) {
+    sprintf(string,"%s_load_offset",joint_names[i]);
+    if (read_parameter_pool_double(config_files[PARAMETERPOOL],string,&aux)) {
+      torque_offset[i] = aux;
+    } else {
+      torque_offset[i] = 0.0;
+    }
+  }
 
   // adjust settings if SL runs for a real robot
   setRealRobotOptions();
@@ -250,7 +263,7 @@ main(int argc, char**argv)
       for (size_t i = 0; i < 7; i++) {
 	raw_positions[i+1]  = state.q[i];
 	raw_velocities[i+1] = state.dq[i];
-	raw_torques[i+1]    = state.tau_J[i];
+	raw_torques[i+1]    = state.tau_J[i] - torque_offset[i+1];
       }
 
       // change sign of the readings as we seemingly get the force/torque the robot applies
@@ -291,7 +304,7 @@ main(int argc, char**argv)
 	    tau_d[i] = 0.0;
 	} else {
 	  for (size_t i = 0; i < 7; i++) {
-	    tau_d[i] = raw_desired_torques[i+1]; 
+	    tau_d[i] = raw_desired_torques[i+1] + torque_offset[i+1]; 
 	  }
 	}
       }
@@ -1409,7 +1422,7 @@ checkForMessages(void)
       // ---------------------------------------------------------------------------
     } else if (strcmp(name,"calibrateFT") == 0) { 
 
-      sendCommandLineCmd("calibrate_cFT");
+      sendCommandLineCmd((char *)"calibrate_cFT");
       
     // ---------------------------------------------------------------------------
     } else if (strcmp(name,"status") == 0) { 
