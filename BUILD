@@ -1,5 +1,13 @@
 package(default_visibility = ["//visibility:public"])
 
+exports_files([
+    "src/SL_main.c",
+    "src/SL_parm_estimate.c",
+    "include/SL_user.h",
+    "src/SL_user_motor.c",
+    "src/SL_user_sensor_proc_unix.c",        
+])
+
 cc_library(
     name = "panda",
     srcs = [
@@ -48,7 +56,7 @@ cc_library(
         "//experimental/users/sschaal/SL/utilities:utility",
         "//third_party/freeglut:freeglut_base",
         "//third_party/glu:native",
-        "//third_party/Xorg:libX11",	
+        "//third_party/Xorg:libX11",
     ],
 )
 
@@ -92,56 +100,3 @@ cc_library(
     ],
 )
 
-cc_binary(
-    name = "xpanda",
-    srcs = [
-        "src/SL_main.c",
-    ],
-    includes = [
-        "include",
-        "math",
-    ],
-    deps = [
-        ":panda",
-        "//experimental/users/sschaal/SL/SL:SLcommon",
-        "//experimental/users/sschaal/SL/utilities:utility",
-        "//third_party/Xorg:libX11",	
-	
-    ],
-)
-
-cc_binary(
-    name = "xpest",
-    srcs = [
-        "include/SL_user.h",
-        "//experimental/users/sschaal/SL/SL:src/SL_parm_estimate.c",
-    ],
-    includes = [
-        "include",
-        "math",
-    ],
-    deps = [
-        ":panda",
-        "//experimental/users/sschaal/SL/SL:SLcommon",
-        "//experimental/users/sschaal/SL/utilities:utility",
-    ],
-)
-
-cc_binary(
-    name = "xmotor",
-    srcs = [
-        "include/SL_user.h",
-        "src/SL_user_motor.c",
-        "src/SL_user_sensor_proc_unix.c",
-    ],
-    includes = [
-        "include",
-        "math",
-    ],
-    deps = [
-        ":panda",
-        "//experimental/users/sschaal/SL/SL:SLcommon",
-        "//experimental/users/sschaal/SL/SL:SLmotor",
-        "//experimental/users/sschaal/SL/utilities:utility",
-    ],
-)
