@@ -1,24 +1,41 @@
 package(default_visibility = ["//visibility:public"])
 
-exports_files([
-    "src/SL_main.c",
-    "src/SL_parm_estimate.c",
+# Every SL directory has a symbolic link to config/bazel to access the config files as local path.
+# While not pretty, this allows BUILD files to be independt of the SL_ROOT workspace path, and only
+# SL.bzl needs to be adjusted
+
+load(":bazel/SL.bzl", "SL_ROOT","SL_ROOT_WS")
+
+# the name of this robot: various rules use the NAME such that BUILD files are easy to adapt to another robot
+NAME = "panda"
+
+# the filegroups are needed for the final build of binaries, which is best done in the "user" directory of
+# a robot. Using these filegroups may create bazel warnings, which can be ignored.
+filegroup(
+    name = "main_srcs",
+    srcs = [
+    	"src/SL_main.c",
+    ],
+)
+
+filegroup(
+    name = "motor_srcs",
+    srcs = [
     "include/SL_user.h",
     "src/SL_user_motor.c",
     "src/SL_user_sensor_proc_unix.c",        
-])
+    ],
+)
 
+# the following libraries are needed for the different binaries of the SL robot processes
+
+# the library for the main program, which starts all other processes
 cc_library(
     name = "panda",
     srcs = [
         "src/SL_user_commands.c",
         "src/SL_user_common.c",
-        "//experimental/users/sschaal/SL/SL:src/SL_dynamics.c",
-        "//experimental/users/sschaal/SL/SL:src/SL_forDynArt.cpp",
-        "//experimental/users/sschaal/SL/SL:src/SL_forDynComp.cpp",
-        "//experimental/users/sschaal/SL/SL:src/SL_invDynArt.cpp",
-        "//experimental/users/sschaal/SL/SL:src/SL_invDynNE.cpp",
-        "//experimental/users/sschaal/SL/SL:src/SL_kinematics.c",
+        SL_ROOT+"SL:kin_and_dyn_srcs",
     ],
     includes = [
         "include",
@@ -29,12 +46,13 @@ cc_library(
         "math/*.h",
     ]),
     deps = [
-        "//experimental/users/sschaal/SL/SL:SLcommon",
-        "//experimental/users/sschaal/SL/lwpr",
-        "//experimental/users/sschaal/SL/utilities:utility",
+        SL_ROOT+"SL:SLcommon",
+        SL_ROOT+"lwpr",
+        SL_ROOT+"utilities:utility",
     ],
 )
 
+# graphics and visualization library
 cc_library(
     name = "panda_openGL",
     srcs = [
@@ -47,19 +65,18 @@ cc_library(
     textual_hdrs = glob([
         "include/*.h",
         "math/*.h",
-        "include/GL/*.h",
-        "include/X11/*.h",
     ]),
     deps = [
-        "//experimental/users/sschaal/SL/SL:SLcommon",
-        "//experimental/users/sschaal/SL/lwpr",
-        "//experimental/users/sschaal/SL/utilities:utility",
+        SL_ROOT+"SL:SLcommon",
+        SL_ROOT+"lwpr",
+        SL_ROOT+"utilities:utility",
         "//third_party/freeglut:freeglut_base",
         "//third_party/glu:native",
         "//third_party/Xorg:libX11",
     ],
 )
 
+# the task process, which is the core process for a user to modify
 cc_library(
     name = "panda_task",
     srcs = [
@@ -74,12 +91,13 @@ cc_library(
         "math/*.h",
     ]),
     deps = [
-        "//experimental/users/sschaal/SL/SL:SLcommon",
-        "//experimental/users/sschaal/SL/lwpr",
-        "//experimental/users/sschaal/SL/utilities:utility",
+        SL_ROOT+"SL:SLcommon",
+        SL_ROOT+"lwpr",
+        SL_ROOT+"utilities:utility",
     ],
 )
 
+# the physical simulation
 cc_library(
     name = "panda_simulation",
     srcs = [
@@ -94,9 +112,9 @@ cc_library(
         "math/*.h",
     ]),
     deps = [
-        "//experimental/users/sschaal/SL/SL:SLcommon",
-        "//experimental/users/sschaal/SL/lwpr",
-        "//experimental/users/sschaal/SL/utilities:utility",
+        SL_ROOT+"SL:SLcommon",
+        SL_ROOT+"lwpr",
+        SL_ROOT+"utilities:utility",
     ],
 )
 
