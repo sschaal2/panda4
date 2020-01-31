@@ -512,49 +512,59 @@ drawForceTorqueSensor(void)
   double s[N_CART+1];
   double e[N_CART+1];
   double arrow_width = 0.01;
+  double off_local[N_CART+1];
+  double off_global[N_CART+1];    
 
-  for (n=1; n<=N_ENDEFFS; ++n) {
-    
-    // rotate the force torque info to world coordinates
-    for (i=1; i<=N_CART; ++i) {
-      f[i] = 0.;
-      t[i] = 0.;
-      for (j=1; j<=N_CART; ++j) {
-	f[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[C_FX-1+j];
-	t[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[C_MX-1+j];
-      }
+  // rotate the force torque info to world coordinates
+  for (i=1; i<=N_CART; ++i) {
+    f[i] = 0.;
+    t[i] = 0.;
+    for (j=1; j<=N_CART; ++j) {
+      f[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[C_FX-1+j];
+      t[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[C_MX-1+j];
     }
-    
-    glPushMatrix();
-    
-    // move to the force torque sensor
-    glTranslated(link_pos_sim[FLANGE][_X_],link_pos_sim[FLANGE][_Y_],link_pos_sim[FLANGE][_Z_]);
-
-
-    // the start and end point of the force vector
-    s[_X_] =  0.0;
-    s[_Y_] =  0.0;
-    s[_Z_] =  0.0;
-
-    e[_X_] = s[_X_] + f[_X_]*fscale_N;
-    e[_Y_] = s[_Y_] + f[_Y_]*fscale_N;
-    e[_Z_] = s[_Z_] + f[_Z_]*fscale_N;
-
-
-    glColor4f (0.8,1.0,1.0,1.0);      
-    drawArrow(s,e,arrow_width);
-
-    e[_X_] = s[_X_] + t[_X_]*fscale_Nm;
-    e[_Y_] = s[_Y_] + t[_Y_]*fscale_Nm;
-    e[_Z_] = s[_Z_] + t[_Z_]*fscale_Nm;
-
-    
-    glColor4f (0.8,0.4,0.0,1.0);
-    drawArrow(s,e,arrow_width);
-
-    glPopMatrix();
-
   }
+
+  // offset vector of load cell relative to J7_LINK
+  vec_zero_size(off_local,N_CART);
+  off_local[_Z_] = FL+FT_OFF_Z;
+  for (i=1; i<=N_CART; ++i) {
+    off_global[i] = 0.;
+    for (j=1; j<=N_CART; ++j) {
+      off_global[i] += Alink_sim[FLANGE][i][j]*off_local[j];
+    }
+  }
+
+  glPushMatrix();
+    
+  // move to the force torque sensor
+  glTranslated(link_pos_sim[J7_LINK][_X_],link_pos_sim[J7_LINK][_Y_],link_pos_sim[J7_LINK][_Z_]);
+  glTranslated(off_global[_X_],off_global[_Y_],off_global[_Z_]);
+
+
+  // the start and end point of the force vector
+  s[_X_] =  0.0;
+  s[_Y_] =  0.0;
+  s[_Z_] =  0.0;
+
+  e[_X_] = s[_X_] + f[_X_]*fscale_N;
+  e[_Y_] = s[_Y_] + f[_Y_]*fscale_N;
+  e[_Z_] = s[_Z_] + f[_Z_]*fscale_N;
+
+
+  glColor4f (0.8,1.0,1.0,1.0);      
+  drawArrow(s,e,arrow_width);
+
+  e[_X_] = s[_X_] + t[_X_]*fscale_Nm;
+  e[_Y_] = s[_Y_] + t[_Y_]*fscale_Nm;
+  e[_Z_] = s[_Z_] + t[_Z_]*fscale_Nm;
+
+    
+  glColor4f (0.8,0.4,0.0,1.0);
+  drawArrow(s,e,arrow_width);
+
+  glPopMatrix();
+
 }
 
 

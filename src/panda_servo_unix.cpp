@@ -152,6 +152,7 @@ static void *gripperThread(void *);
 static int  checkForMessages(void);
 
 static int  set_stiffness_frame(franka::Robot &robot);
+static int  set_endeffector_frame(franka::Robot &robot);
 
 
 
@@ -458,36 +459,9 @@ init_panda_servo(franka::Robot &robot)
   robot.setCartesianImpedance({{3000, 3000, 3000, 300, 300, 300}});
 
   // set the stiffness frame of the robot to the endeffector frame
-  set_stiffness_frame(robot);
+  set_endeffector_frame(robot);
+  set_stiffness_frame(robot);  
 
-#if 0
-  std::array<double, 16> offset_homogeneous_matrix;
-  offset_homogeneous_matrix.fill(0.0);
-
-  // compute the rotation matrix of endeffector
-  for (i=1; i<=N_CART; ++i)
-    v[i] = endeff[HAND].a[i];
-
-  eulerToRotMat(v,R);
-
-  // sort all into a homogenous transformation matrix in column-major format (Franka!)
-  count = 0;
-  for (i=1; i<=N_CART; ++i) {
-    for (j=1; j<=N_CART; ++j) {
-      offset_homogeneous_matrix[count++] = R[j][i];
-    }
-    offset_homogeneous_matrix[count++] = 0.0;
-  }
-
-  for (i=1; i<=N_CART; ++i)
-    offset_homogeneous_matrix[count++] = endeff[HAND].x[i];
-
-  offset_homogeneous_matrix[count++] = 1.0;
-
-  robot.setK(offset_homogeneous_matrix);
-
-#endif
-  
   printf("\nPanda initialized\n");
 
 
@@ -501,7 +475,8 @@ init_panda_servo(franka::Robot &robot)
    
 \remarks 
 
- Sets the stiffness coordinate from the current endeffector info
+ Sets the stiffness coordinate for the simulated F/T sensor. This is relative
+ to the EE (endeffector) frame, which was set in another function
 
  *******************************************************************************
  Function Parameters: [in]=input,[out]=output
@@ -521,8 +496,8 @@ set_stiffness_frame(franka::Robot &robot)
   offset_homogeneous_matrix.fill(0.0);
 
   // compute the rotation matrix of endeffector
-  for (i=1; i<=N_CART; ++i)
-    v[i] = endeff[HAND].a[i];
+  vec_zero(v);
+  v[_Z_] = FT_OFF_G;
 
   eulerToRotMat(v,R);
 
@@ -535,12 +510,81 @@ set_stiffness_frame(franka::Robot &robot)
     offset_homogeneous_matrix[count++] = 0.0;
   }
 
-  for (i=1; i<=N_CART; ++i)
-    offset_homogeneous_matrix[count++] = endeff[HAND].x[i];
+  for (i=1; i<=N_CART; ++i) {
+    if ( i == _Z_ ) {
+      offset_homogeneous_matrix[count++] = FT_OFF_Z;
+    } else {
+      offset_homogeneous_matrix[count++] = 0.0;
+    }
+  }
 
   offset_homogeneous_matrix[count++] = 1.0;
 
   robot.setK(offset_homogeneous_matrix);
+
+  return TRUE;
+
+}
+/*!*****************************************************************************
+ *******************************************************************************
+\note  set_endeffector_frame
+\date  May 2019
+   
+\remarks 
+
+ Sets the endeffector coordinate frame. This overwrite any config from the 
+ Web interface, such that the EE is consistently at the flange. This is 
+ important to set the stiffness frame afterwards, which mimics the location
+ of an actual load cell (such that an actualy load cell can be mounted 
+ trivially with no code change, just offset parameters in SL_user.h
+
+ Caveat: the libfranka will report endeffector info in this EE frame, which is
+ not the actual endeffector. But SL does not use this info as it relies on its
+ own kinematics computations.
+
+ *******************************************************************************
+ Function Parameters: [in]=input,[out]=output
+
+ \param[in]     robot  : robot object of Panda
+
+ ******************************************************************************/
+static int
+set_endeffector_frame(franka::Robot &robot)
+{
+  int i,j, count;
+  MY_MATRIX(R,1,N_CART,1,N_CART);
+  MY_VECTOR(v,1,N_CART);
+
+  // set the stiffness frame of the robot to the endeffector frame
+  std::array<double, 16> offset_homogeneous_matrix;
+  offset_homogeneous_matrix.fill(0.0);
+
+  // compute the rotation matrix of endeffector
+  vec_zero(v);
+  v[_G_] = FL_G;
+
+  eulerToRotMat(v,R);
+
+  // sort all into a homogenous transformation matrix in column-major format (Franka!)
+  count = 0;
+  for (i=1; i<=N_CART; ++i) {
+    for (j=1; j<=N_CART; ++j) {
+      offset_homogeneous_matrix[count++] = R[j][i];
+    }
+    offset_homogeneous_matrix[count++] = 0.0;
+  }
+
+  for (i=1; i<=N_CART; ++i) {
+    if ( i == _Z_ ) {
+      offset_homogeneous_matrix[count++] = FL;
+    } else {
+      offset_homogeneous_matrix[count++] = 0.0;
+    }
+  }
+
+  offset_homogeneous_matrix[count++] = 1.0;
+
+  robot.setEE(offset_homogeneous_matrix);
 
   return TRUE;
 

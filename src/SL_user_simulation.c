@@ -106,6 +106,7 @@ run_user_simulation(void)
   double        force_world[N_CART+1];
   double        torque_world[N_CART+1];
   double        torque_correction[N_CART+1];
+  double        offset[N_CART+1];
 
 
   // simulate the computed F/T sensor of external forces. We can use the
@@ -121,18 +122,20 @@ run_user_simulation(void)
   }
 
   
-  // this force/torque is slighly wrong: it needs to be at the endeffector coordinate
+  // this force/torque is slighly wrong: it needs to be at the loadcell coordinate
   // system, and needs to take into account moments from translating from
-  // J7 to the endeffector FLANGE. Thus, the moments need to be corrected.
-  
-  vec_mult_outer_size(endeff[HAND].x, force_local, N_CART, torque_correction);
+  // J7 to the load cell coordinate. Thus, the moments need to be corrected.
+
+  vec_zero_size(offset,N_CART);
+  offset[_Z_] = FL+FT_OFF_Z;
+  vec_mult_outer_size(offset, force_local, N_CART, torque_correction);
   
   for (i=1; i<=N_CART; ++i) {
     torque_local[i] += torque_correction[i];
   }
 
-  // the computed torque is reported in endeffector coordinates, i.e., we need to
-  // transform back into the world coordinate system ...
+  // the computed torque is reported in load cell coordinates.
+  // Thus, we need to transform back into the world coordinate system ...
 
   for (i=1; i<=N_CART; ++i) {
     force_world[i] = torque_world[i] = 0;
@@ -142,7 +145,8 @@ run_user_simulation(void)
     }
   }
 
-  // ... and now to endeffector coordinates
+  // ... and now to endeffector coordinates, which has the same orientation
+  // as the load cell
   for (i=1; i<=N_CART; ++i) {
     force_local[i] = torque_local[i] = 0;
     for (j=1; j<=N_CART; ++j) {
