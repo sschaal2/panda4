@@ -131,7 +131,7 @@ run_user_simulation(void)
   vec_mult_outer_size(offset, force_local, N_CART, torque_correction);
   
   for (i=1; i<=N_CART; ++i) {
-    torque_local[i] += torque_correction[i];
+    torque_local[i] -= torque_correction[i];
   }
 
   // the computed torque is reported in load cell coordinates.

@@ -561,7 +561,7 @@ set_endeffector_frame(franka::Robot &robot)
 
   // compute the rotation matrix of endeffector
   vec_zero(v);
-  v[_G_] = FL_G;
+  v[_G_] = -FL_G;
 
   eulerToRotMat(v,R);
 
@@ -576,7 +576,7 @@ set_endeffector_frame(franka::Robot &robot)
 
   for (i=1; i<=N_CART; ++i) {
     if ( i == _Z_ ) {
-      offset_homogeneous_matrix[count++] = FL;
+      offset_homogeneous_matrix[count++] = 0.0; // this means at the FLANGE
     } else {
       offset_homogeneous_matrix[count++] = 0.0;
     }

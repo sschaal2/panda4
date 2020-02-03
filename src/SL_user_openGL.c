@@ -507,8 +507,8 @@ drawForceTorqueSensor(void)
   int i,j,n;
   double f[N_CART+1];
   double t[N_CART+1];
-  double fscale_N=0.05;
-  double fscale_Nm=0.05;
+  double fscale_N=0.025;
+  double fscale_Nm=0.15;
   double s[N_CART+1];
   double e[N_CART+1];
   double arrow_width = 0.01;
