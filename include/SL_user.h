@@ -45,8 +45,8 @@
 #define FT_OFF_G  0.0   // orientation offset of F/T sensor (computed)
 
 #define FINGER_OFF 0.0584
-// #define FINGER_LENGTH 0.045  //for Franka finger
-#define FINGER_LENGTH 0.070     //for Franka-Robotiq finger
+// #define FINGER_LENGTH 0.045  //for Franka finger: end of finger
+#define FINGER_LENGTH 0.068     //for Franka-Robotiq finger: end of finger
 
 // links of the robot
 enum RobotLinks {
@@ -152,7 +152,7 @@ enum RobotMiscSensors {
 
 //! divisor to obtain task servo rate (task servo can run slower than
 //  base rate, but only in integer fractions */
-#define  TASK_SERVO_RATIO   R1TO2
+#define  TASK_SERVO_RATIO   R1TO1
 
 // settings for D/A debugging information -- see SL_oscilloscope.c 
 #define   D2A_CM      1
