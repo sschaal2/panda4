@@ -1,4 +1,9 @@
-package(default_visibility = ["//visibility:public"])
+# Every SL directory has a symbolic link to config/bazel to access the config files as local path.
+# While not pretty, this allows BUILD files to be independt of the SL_ROOT workspace path, and only
+# SL.bzl needs to be adjusted
+load(":bazel/SL.bzl", "SL_ROOT", "SL_ROOT_WS")
+
+package(default_visibility = [SL_ROOT + ":__subpackages__"])
 
 licenses(["notice"])
 
@@ -74,10 +79,10 @@ cc_library(
         SL_ROOT + "SL:SLcommon",
         SL_ROOT + "lwpr",
         SL_ROOT + "utilities:utility",
-        "//third_party/Xorg:libX11",
-        "//third_party/freeglut:headers",
-        "//third_party/freeglut:native",
-        "//third_party/glu:native",
+        # "//third_party/Xorg:libX11",
+        # "//third_party/freeglut:headers",
+        # "//third_party/freeglut:native",
+        # "//third_party/glu:native",
     ],
 )
 
@@ -121,29 +126,4 @@ cc_library(
         SL_ROOT + "lwpr",
         SL_ROOT + "utilities:utility",
     ],
-)
-
-cc_library(
-    name = "src/sl_rmain",
-    srcs = ["src/SL_rmain.c"],
-)
-
-cc_library(
-    name = "src/panda_servo_unix",
-    srcs = ["src/panda_servo_unix.cpp"],
-)
-
-cc_library(
-    name = "src/sl_main",
-    srcs = ["src/SL_main.c"],
-)
-
-cc_library(
-    name = "src/sl_user_sensor_proc_unix",
-    srcs = ["src/SL_user_sensor_proc_unix.c"],
-)
-
-cc_library(
-    name = "src/sl_user_motor",
-    srcs = ["src/SL_user_motor.c"],
 )
