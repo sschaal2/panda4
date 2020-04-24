@@ -22,9 +22,10 @@ NAME = "panda"
 # a robot. Using these filegroups may create bazel warnings, which can be ignored.
 filegroup(
     name = "main_srcs",
-    srcs = [
+    srcs = glob([
         "src/SL_main.c",
-    ],
+        "include/*.h",
+    ]),
 )
 
 filegroup(
@@ -79,6 +80,7 @@ cc_library(
         SL_ROOT + "SL:SLcommon",
         SL_ROOT + "lwpr",
         SL_ROOT + "utilities:utility",
+        "//third_party/Xorg:X11headers",	
         # "//third_party/Xorg:libX11",
         # "//third_party/freeglut:headers",
         # "//third_party/freeglut:native",
