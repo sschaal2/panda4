@@ -1,19 +1,16 @@
 # Every SL directory has a symbolic link to config/bazel to access the config files as local path.
 # While not pretty, this allows BUILD files to be independt of the SL_ROOT workspace path, and only
 # SL.bzl needs to be adjusted
-load(":bazel/SL.bzl", "SL_ROOT", "SL_ROOT_WS", "SL_VISIBILITY")
+load(":bazel/SL.bzl", "FEATURES", "SL_ROOT", "SL_VISIBILITY")
 
-package(default_visibility = SL_VISIBILITY)
+package(
+    default_visibility = SL_VISIBILITY,
+    features = FEATURES,
+)
 
 licenses(["notice"])
 
 exports_files(["LICENSE"])
-
-# Every SL directory has a symbolic link to config/bazel to access the config files as local path.
-# While not pretty, this allows BUILD files to be independt of the SL_ROOT workspace path, and only
-# SL.bzl needs to be adjusted
-
-load(":bazel/SL.bzl", "SL_ROOT")
 
 # the name of this robot: various rules use the NAME such that BUILD files are easy to adapt to another robot
 NAME = "panda"
@@ -79,10 +76,10 @@ cc_library(
         SL_ROOT + "SL:SLcommon",
         SL_ROOT + "lwpr",
         SL_ROOT + "utilities:utility",
-        # "//third_party/Xorg:libX11",
-        # "//third_party/freeglut:headers",
-        # "//third_party/freeglut:native",
-        # "//third_party/glu:native",
+        "//third_party/Xorg:libX11",
+        "//third_party/freeglut:headers",
+        "//third_party/freeglut:native",
+        "//third_party/glu:native",
     ],
 )
 
