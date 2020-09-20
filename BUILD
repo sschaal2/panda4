@@ -19,9 +19,10 @@ NAME = "panda"
 # a robot. Using these filegroups may create bazel warnings, which can be ignored.
 filegroup(
     name = "main_srcs",
-    srcs = [
+    srcs = glob([
         "src/SL_main.c",
-    ],
+        "include/*.h",
+    ]),
 )
 
 filegroup(
