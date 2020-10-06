@@ -1,14 +1,16 @@
-package(default_visibility = ["//visibility:public"])
+# Every SL directory has a symbolic link to config/bazel to access the config files as local path.
+# While not pretty, this allows BUILD files to be independt of the SL_ROOT workspace path, and only
+# SL.bzl needs to be adjusted
+load(":bazel/SL.bzl", "FEATURES", "SL_ROOT", "SL_VISIBILITY")
+
+package(
+    default_visibility = SL_VISIBILITY,
+    features = FEATURES,
+)
 
 licenses(["notice"])
 
 exports_files(["LICENSE"])
-
-# Every SL directory has a symbolic link to config/bazel to access the config files as local path.
-# While not pretty, this allows BUILD files to be independt of the SL_ROOT workspace path, and only
-# SL.bzl needs to be adjusted
-
-load(":bazel/SL.bzl", "SL_ROOT")
 
 # the name of this robot: various rules use the NAME such that BUILD files are easy to adapt to another robot
 NAME = "panda"
@@ -17,9 +19,10 @@ NAME = "panda"
 # a robot. Using these filegroups may create bazel warnings, which can be ignored.
 filegroup(
     name = "main_srcs",
-    srcs = [
+    srcs = glob([
         "src/SL_main.c",
-    ],
+        "include/*.h",
+    ]),
 )
 
 filegroup(
@@ -121,29 +124,4 @@ cc_library(
         SL_ROOT + "lwpr",
         SL_ROOT + "utilities:utility",
     ],
-)
-
-cc_library(
-    name = "src/sl_rmain",
-    srcs = ["src/SL_rmain.c"],
-)
-
-cc_library(
-    name = "src/panda_servo_unix",
-    srcs = ["src/panda_servo_unix.cpp"],
-)
-
-cc_library(
-    name = "src/sl_main",
-    srcs = ["src/SL_main.c"],
-)
-
-cc_library(
-    name = "src/sl_user_sensor_proc_unix",
-    srcs = ["src/SL_user_sensor_proc_unix.c"],
-)
-
-cc_library(
-    name = "src/sl_user_motor",
-    srcs = ["src/SL_user_motor.c"],
 )
