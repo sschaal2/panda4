@@ -333,6 +333,7 @@ main(int argc, char**argv)
     // e.g., when executing freeze. Normally, if smooth motion is generated, we should
     // not get weird dynamics from this
     robot.control(panda_callback,true,franka::kMaxCutoffFrequency);
+    //robot.control(panda_callback,true,franka::kDefaultCutoffFrequency);    
 
   } catch (const franka::Exception& ex) {
     std::cerr << ex.what() << std::endl;
@@ -847,7 +848,7 @@ translate_commands(SL_Jstate *command)
     raw = temp/joint_trans_desired_torques[i].slope -
       joint_trans_desired_torques[i].offset; 
 
-    raw_desired_torques[i] = (int) raw;
+    raw_desired_torques[i] = raw;
 
   }
 

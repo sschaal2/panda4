@@ -35,6 +35,7 @@ include_directories(BEFORE ../include)
 include_directories(BEFORE ../src)
 include_directories(BEFORE ../math)
 include_directories(BEFORE ../../libfranka/include)
+include_directories(BEFORE /usr/include/eigen3)
 
 if($ENV{HOST} MATCHES ${PANDA_HOST})
   add_definitions(-DPANDA)
