@@ -111,6 +111,15 @@ enum RobotMiscSensors {
   C_MY,           //!< computed load cell moment in y
   C_MZ,           //!< computed load cell moment in z
 
+  // the load cell readings from an actual sensor
+  S_FX,           //!< sensed load cell force in x
+  S_FY,           //!< sensed load cell force in y
+  S_FZ,           //!< sensed load cell force in z
+  S_MX,           //!< sensed load cell moment in x
+  S_MY,           //!< sensed load cell moment in y
+  S_MZ,           //!< sensed load cell moment in z
+
+  // gripper information
   G_WIDTH,        //!< gripper width
   G_MOTION,       //!< gripper is moving: yes/no
   
