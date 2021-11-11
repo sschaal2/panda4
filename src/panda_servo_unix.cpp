@@ -49,6 +49,13 @@
 #include <franka/robot.h>
 #include <franka/gripper.h>
 
+// axia f/t sensor includes
+#include "ethercat_communication.h"
+#include "axia80_ethercat.h"
+using ethercat_communication::EthercatCommunication;
+using axia80_ethercat::Axia80Ethercat;
+
+
 #define TRANSLATION_FILE "Translation.cf"
 #define TIME_OUT_NS  NO_WAIT
 
@@ -60,6 +67,8 @@ double servo_time;
 double        **joint_lin_rot;
 double         *pos_polar;
 double         *load_polar;
+
+Axia80Ethercat *axia80_ptr;
 
 //! local variables
 typedef struct Translation {
@@ -252,11 +261,32 @@ main(int argc, char**argv)
     // turn on auto recovery
     robot.automaticErrorRecovery();
 
+    // the axia load cell
+    EthercatCommunication ethercat_mod;
+    Axia80Ethercat        axia80;
+    double                ft_in_units[6];
+
+    ethercat_mod.InitEthercat("enp2s0");
+    if (ethercat_mod.active_) {
+      axia80.InitAxia80( &ethercat_mod,
+			 1,
+			 axia80_ethercat::kSlot1,
+			 axia80_ethercat::k3900Hz,
+			 axia80_ethercat::kFilter4);
+      axia80_ptr = &axia80;
+    } else {
+      printf("No active ethercat master running\n");
+      return false;
+    }
+    
+
     // Define callback for the joint torque control loop.
     std::function<franka::Torques(const franka::RobotState&, franka::Duration)> panda_callback = 
-      [&model,&robot](const franka::RobotState& state, franka::Duration period) -> franka::Torques {
+      [&model,&robot,&axia80,&ethercat_mod](const franka::RobotState& state, franka::Duration period) -> franka::Torques {
 
       static int n_calls = 0;
+      double ft_in_units[6];
+      axia80_ethercat::Axia80Data data;
 
       ++n_calls;
 
@@ -275,13 +305,23 @@ main(int argc, char**argv)
       raw_misc_sensors[C_MY] = -state.K_F_ext_hat_K[4];
       raw_misc_sensors[C_MZ] = -state.K_F_ext_hat_K[5];
 
+      // read the axia load cell
+      ethercat_mod.RunEthercat();
+      axia80.ReadAxia80Data(&data,ft_in_units);
+      raw_misc_sensors[S_FX] = ft_in_units[0];
+      raw_misc_sensors[S_FY] = ft_in_units[1];
+      raw_misc_sensors[S_FZ] = ft_in_units[2];
+      raw_misc_sensors[S_MX] = ft_in_units[3];
+      raw_misc_sensors[S_MY] = ft_in_units[4];
+      raw_misc_sensors[S_MZ] = ft_in_units[5];
+
       // check the timing: number of milliseconds the servo loop ran: should be 1 for perfect behavior
       real_time_dt = period.toMSec();
 
       // all processing is done in a separate function
       std::array<double, 7> tau_d;
 
-      // computer gravity torques to inform the motor servo about the total command
+      // compute gravity torques to inform the motor servo about the total command
       // and compute other dyn parameters for print out. Only gravity is really needed
       // while coriolis and mass matrix are just for debugging
       
@@ -1264,6 +1304,9 @@ compute_ft_offsets(void)
 
   for (j=1; j<=2*N_CART; ++j)
     misc_trans_sensors[C_FX-1+j].offset = -data[j]/(double)count;
+
+  // zero the axia80
+  axia80_ptr->TareAxia80();
 
   
 }

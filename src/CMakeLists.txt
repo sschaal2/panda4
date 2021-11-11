@@ -36,6 +36,10 @@ include_directories(BEFORE ../src)
 include_directories(BEFORE ../math)
 include_directories(BEFORE ../../libfranka/include)
 include_directories(BEFORE /usr/include/eigen3)
+include_directories(BEFORE ../../SOEM/install/include/soem)
+
+link_directories(AFTER ../..//SOEM/install/lib)
+
 
 if($ENV{HOST} MATCHES ${PANDA_HOST})
   add_definitions(-DPANDA)
@@ -130,6 +134,6 @@ if($ENV{HOST} MATCHES ${PANDA_HOST})
   target_link_libraries("xr${NAME}" SLcommon utility ${LAB_STD_LIBS})
 
   add_executable(xrprobot ${SRCS_XRPROBOT})
-  target_link_libraries(xrprobot franka SLcommon utility  rt ${LAB_STD_LIBS})
+  target_link_libraries(xrprobot franka SLcommon utility ftcells comm soem rt ${LAB_STD_LIBS})
 
 endif()

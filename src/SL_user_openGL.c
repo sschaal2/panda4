@@ -17,9 +17,7 @@
 #include "SL_system_headers.h"
 
 // openGL headers
-#include "GL/freeglut_std.h"
-#include "GL/freeglut_ext.h"
-#include "GL/glu.h"
+#include "GL/freeglut.h"
 #include <X11/Xlib.h>
 
 // user specific headers
