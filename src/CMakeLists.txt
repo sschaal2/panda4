@@ -38,10 +38,9 @@ include_directories(BEFORE ../../libfranka/include)
 include_directories(BEFORE /usr/include/eigen3)
 include_directories(BEFORE ../../SOEM/install/include/soem)
 
-link_directories(AFTER ../..//SOEM/install/lib)
-
 
 if($ENV{HOST} MATCHES ${PANDA_HOST})
+  link_directories(AFTER ../..//SOEM/install/lib)
   add_definitions(-DPANDA)
   link_directories($ENV{LAB_ROOT}/libfranka/build ${CMAKE_LIBRARY_PATH})
 endif()
