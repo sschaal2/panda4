@@ -209,7 +209,7 @@ void
 display(void)
 
 {
-  int i;
+  int i,j;
   static SL_Jstate  *state = joint_sim_state;
   static SL_endeff  *eff   = endeff;
   static SL_Cstate  *basec = &base_state;
@@ -225,6 +225,7 @@ display(void)
       fscale = w;
   }
 
+
 #include "OpenGL.h"
 
   // the standard display functions for openGL
@@ -232,7 +233,6 @@ display(void)
 
     // draw force/torque sensor
   drawForceTorqueSensor();
-
 
 }
 
