@@ -43,7 +43,7 @@ int print_Hmat = FALSE;
 // local variables
   
 // local functions
-static int createWindows(void);
+static int  createWindows(void);
 static void myDrawGLElement(int num, double length, int flag);
 static void drawForceTorqueSensor(void);
 

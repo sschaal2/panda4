@@ -25,7 +25,7 @@
 
 // global variables
 char joint_names[][20]= {
-  {"dummy"},
+  {"BASE"},
   {"J1"},
   {"J2"},
   {"J3"},
