@@ -518,8 +518,8 @@ drawForceTorqueSensor(void)
     f[i] = 0.;
     t[i] = 0.;
     for (j=1; j<=N_CART; ++j) {
-      f[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[C_FX-1+j];
-      t[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[C_MX-1+j];
+      f[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[S_FX-1+j];
+      t[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[S_MX-1+j];
     }
   }
 

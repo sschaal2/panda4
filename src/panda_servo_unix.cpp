@@ -308,23 +308,23 @@ main(int argc, char**argv)
       raw_misc_sensors[C_MZ] = -state.K_F_ext_hat_K[5];
 
 #ifdef AXIA80
-      // read the axia load cell
+      // read the axia load cell and fix orientation offset of load cell relative to gripper coordinates
       ethercat_mod.RunEthercat();
       axia80.ReadAxia80Data(&data,ft_in_units);
-      raw_misc_sensors[S_FX] =  ft_in_units[1];
-      raw_misc_sensors[S_FY] = -ft_in_units[0];
+      raw_misc_sensors[S_FX] =  ft_in_units[1] * cos(PI/12.) - ft_in_units[0] * sin(PI/12.);;
+      raw_misc_sensors[S_FY] = -ft_in_units[0] * cos(PI/12.) - ft_in_units[1] * sin(PI/12.);
       raw_misc_sensors[S_FZ] =  ft_in_units[2];
       raw_misc_sensors[S_MX] =  ft_in_units[4];
       raw_misc_sensors[S_MY] = -ft_in_units[3];
       raw_misc_sensors[S_MZ] =  ft_in_units[5];
 #else
       // just pretend the sensed load cell is identical to the computed one
-      raw_misc_sensors[S_FX] =  raw_misc_sensors[S_FX];
-      raw_misc_sensors[S_FY] =  raw_misc_sensors[S_FY];
-      raw_misc_sensors[S_FZ] =  raw_misc_sensors[S_FZ];
-      raw_misc_sensors[S_MX] =  raw_misc_sensors[S_MX];
-      raw_misc_sensors[S_MY] =  raw_misc_sensors[S_MY];
-      raw_misc_sensors[S_MZ] =  raw_misc_sensors[S_MZ];
+      raw_misc_sensors[S_FX] =  raw_misc_sensors[C_FX];
+      raw_misc_sensors[S_FY] =  raw_misc_sensors[C_FY];
+      raw_misc_sensors[S_FZ] =  raw_misc_sensors[C_FZ];
+      raw_misc_sensors[S_MX] =  raw_misc_sensors[C_MX];
+      raw_misc_sensors[S_MY] =  raw_misc_sensors[C_MY];
+      raw_misc_sensors[S_MZ] =  raw_misc_sensors[C_MZ];
 #endif
       // check the timing: number of milliseconds the servo loop ran: should be 1 for perfect behavior
       real_time_dt = period.toMSec();
