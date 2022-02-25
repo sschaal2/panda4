@@ -41,9 +41,9 @@
 
 // the comuterd F/T sensing is treated in location like a load cellt
 // mounted at the flange. Offsets are relative to panda flange
-//#define FT_OFF_Z  0.0       // offset of F/T sensor (at flange)
-#define FT_OFF_Z  0.043   // offset of F/T sensor (Axia80+endeffector tooling)
-#define FT_OFF_G  0.0   // orientation offset of F/T sensor (computed)
+//#define FT_OFF_Z  0.0   // offset of F/T sensor (at flange)
+#define FT_OFF_Z  0.046   // offset of F/T sensor (Axia80+endeffector tooling)
+#define FT_OFF_G  0.0     // orientation offset of F/T sensor (computed)
 
 #define FINGER_OFF 0.0584
 // #define FINGER_LENGTH 0.045  //for Franka finger: end of finger
