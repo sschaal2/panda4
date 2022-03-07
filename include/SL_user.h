@@ -41,7 +41,8 @@
 
 // the comuterd F/T sensing is treated in location like a load cellt
 // mounted at the flange. Offsets are relative to panda flange
-#define FT_OFF_Z  0.0   // offset of F/T sensor (computed)
+//#define FT_OFF_Z  0.0       // offset of F/T sensor (at flange)
+#define FT_OFF_Z  0.043   // offset of F/T sensor (Axia80+endeffector tooling)
 #define FT_OFF_G  0.0   // orientation offset of F/T sensor (computed)
 
 #define FINGER_OFF 0.0584
@@ -111,6 +112,15 @@ enum RobotMiscSensors {
   C_MY,           //!< computed load cell moment in y
   C_MZ,           //!< computed load cell moment in z
 
+  // the load cell readings from an actual sensor
+  S_FX,           //!< sensed load cell force in x
+  S_FY,           //!< sensed load cell force in y
+  S_FZ,           //!< sensed load cell force in z
+  S_MX,           //!< sensed load cell moment in x
+  S_MY,           //!< sensed load cell moment in y
+  S_MZ,           //!< sensed load cell moment in z
+
+  // gripper information
   G_WIDTH,        //!< gripper width
   G_MOTION,       //!< gripper is moving: yes/no
   

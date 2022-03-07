@@ -49,6 +49,13 @@
 #include <franka/robot.h>
 #include <franka/gripper.h>
 
+// axia f/t sensor includes
+#include "ethercat_communication.h"
+#include "axia80_ethercat.h"
+using ethercat_communication::EthercatCommunication;
+using axia80_ethercat::Axia80Ethercat;
+
+
 #define TRANSLATION_FILE "Translation.cf"
 #define TIME_OUT_NS  NO_WAIT
 
@@ -60,6 +67,8 @@ double servo_time;
 double        **joint_lin_rot;
 double         *pos_polar;
 double         *load_polar;
+
+Axia80Ethercat *axia80_ptr;
 
 //! local variables
 typedef struct Translation {
@@ -252,11 +261,34 @@ main(int argc, char**argv)
     // turn on auto recovery
     robot.automaticErrorRecovery();
 
+#ifdef AXIA80
+    // the axia load cell
+    EthercatCommunication ethercat_mod;
+    Axia80Ethercat        axia80;
+    double                ft_in_units[6];
+
+    ethercat_mod.InitEthercat("enp2s0");
+    if (ethercat_mod.active_) {
+      axia80.InitAxia80( &ethercat_mod,
+			 1,
+			 axia80_ethercat::kSlot1,
+			 axia80_ethercat::k3900Hz,
+			 axia80_ethercat::kFilter4);
+      axia80_ptr = &axia80;
+    } else {
+      printf("No active ethercat master running\n");
+      return false;
+    }
+#endif
+
+
     // Define callback for the joint torque control loop.
     std::function<franka::Torques(const franka::RobotState&, franka::Duration)> panda_callback = 
-      [&model,&robot](const franka::RobotState& state, franka::Duration period) -> franka::Torques {
+      [&model,&robot,&axia80,&ethercat_mod](const franka::RobotState& state, franka::Duration period) -> franka::Torques {
 
       static int n_calls = 0;
+      double ft_in_units[6];
+      axia80_ethercat::Axia80Data data;
 
       ++n_calls;
 
@@ -275,13 +307,32 @@ main(int argc, char**argv)
       raw_misc_sensors[C_MY] = -state.K_F_ext_hat_K[4];
       raw_misc_sensors[C_MZ] = -state.K_F_ext_hat_K[5];
 
+#ifdef AXIA80
+      // read the axia load cell
+      ethercat_mod.RunEthercat();
+      axia80.ReadAxia80Data(&data,ft_in_units);
+      raw_misc_sensors[S_FX] =  ft_in_units[1];
+      raw_misc_sensors[S_FY] = -ft_in_units[0];
+      raw_misc_sensors[S_FZ] =  ft_in_units[2];
+      raw_misc_sensors[S_MX] =  ft_in_units[4];
+      raw_misc_sensors[S_MY] = -ft_in_units[3];
+      raw_misc_sensors[S_MZ] =  ft_in_units[5];
+#else
+      // just pretend the sensed load cell is identical to the computed one
+      raw_misc_sensors[S_FX] =  raw_misc_sensors[S_FX];
+      raw_misc_sensors[S_FY] =  raw_misc_sensors[S_FY];
+      raw_misc_sensors[S_FZ] =  raw_misc_sensors[S_FZ];
+      raw_misc_sensors[S_MX] =  raw_misc_sensors[S_MX];
+      raw_misc_sensors[S_MY] =  raw_misc_sensors[S_MY];
+      raw_misc_sensors[S_MZ] =  raw_misc_sensors[S_MZ];
+#endif
       // check the timing: number of milliseconds the servo loop ran: should be 1 for perfect behavior
       real_time_dt = period.toMSec();
 
       // all processing is done in a separate function
       std::array<double, 7> tau_d;
 
-      // computer gravity torques to inform the motor servo about the total command
+      // compute gravity torques to inform the motor servo about the total command
       // and compute other dyn parameters for print out. Only gravity is really needed
       // while coriolis and mass matrix are just for debugging
       
@@ -333,6 +384,7 @@ main(int argc, char**argv)
     // e.g., when executing freeze. Normally, if smooth motion is generated, we should
     // not get weird dynamics from this
     robot.control(panda_callback,true,franka::kMaxCutoffFrequency);
+    //robot.control(panda_callback,true,franka::kDefaultCutoffFrequency);    
 
   } catch (const franka::Exception& ex) {
     std::cerr << ex.what() << std::endl;
@@ -624,6 +676,10 @@ run_panda_servo(void)
 
   translate_sensor_readings(joint_sim_state);
 
+  // u_grav was computed from the Fanka model as gravity component, and
+  // this gravity component needs to be added to uff that was provided by
+  // the motor servo, which intentially excludes gravity in uff.
+  // this uff part of joint_sim_state is communicated back to the motor servo
   for (i=1; i<=N_DOFS; ++i)
     joint_sim_state[i].uff  += u_grav[i];
 
@@ -847,7 +903,7 @@ translate_commands(SL_Jstate *command)
     raw = temp/joint_trans_desired_torques[i].slope -
       joint_trans_desired_torques[i].offset; 
 
-    raw_desired_torques[i] = (int) raw;
+    raw_desired_torques[i] = raw;
 
   }
 
@@ -1264,6 +1320,9 @@ compute_ft_offsets(void)
   for (j=1; j<=2*N_CART; ++j)
     misc_trans_sensors[C_FX-1+j].offset = -data[j]/(double)count;
 
+  // zero the axia80
+  axia80_ptr->TareAxia80();
+
   
 }
 
@@ -1318,14 +1377,28 @@ Function Parameters: [in]=input,[out]=output
 none
  
 ******************************************************************************/
+#ifdef ROBOTIQ2F
+#define  ROBOTIQ_TIMEOUT 5.0  // in seconds
+#include "robotiq_2f_gripper.h"
+#include "robotiq_2f_gripper_serial.h"
+using robotiq_2f_gripper::Robotiq2fGripperSerial;
+#endif
+
 static void *
 gripperThread(void *) 
 {
   long   last_panda_servo_calls = panda_servo_calls;
+  double gripper_position=0.0,gripper_force=0.0;
 
   try {
 
+#ifdef ROBOTIQ2F
+    char port_name[] = "/dev/ttyUSB1";
+    Robotiq2fGripperSerial gripper(0.085, 0., 0.15, 220.,port_name);
+    gripper.GripperInitialization();
+#else
     franka::Gripper gripper(ip_string);
+#endif
 
     while (run_gripper_thread_flag) {
 
@@ -1339,27 +1412,40 @@ gripperThread(void *)
 
       case MOVE:
 	raw_misc_sensors[G_MOTION] = TRUE;
+#ifdef ROBOTIQ2F
+	gripper.GripperControlCommandBlocking(width, speed, 10, ROBOTIQ_TIMEOUT);	
+#else
 	gripper.move(width,speed);
+#endif	
 	raw_misc_sensors[G_MOTION] = FALSE;	
 	gripper_task = READ_STATE;
 	break;
 	
       case GRASP:
 	raw_misc_sensors[G_MOTION] = TRUE;	
+#ifdef ROBOTIQ2F
+	gripper.GripperControlCommandBlocking(width, speed, force, ROBOTIQ_TIMEOUT);		
+#else
 	gripper.grasp(width,speed,force,eps_in,eps_out);
+#endif		
 	raw_misc_sensors[G_MOTION] = FALSE;		
 	gripper_task = READ_STATE;
 	break;
 	
       case READ_STATE:
       default: // read the gripper state
+#ifdef ROBOTIQ2F
+	gripper.GetGripperStatus(&gripper_position, &gripper_force, ROBOTIQ_TIMEOUT);
+	raw_misc_sensors[G_WIDTH] = gripper_position;	
+#else
 	franka::GripperState gripper_state = gripper.readOnce();
 	raw_misc_sensors[G_WIDTH] = gripper_state.width;
+#endif
 
       }
-
+      
     }
-
+    
   } catch (const franka::Exception& ex) {
 
     std::cerr << "gripperThread:" << std::endl;

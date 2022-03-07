@@ -158,6 +158,8 @@ run_user_simulation(void)
   for (i=1; i<=N_CART; ++i) {
     misc_sim_sensor[C_FX-1+i] = force_local[i];
     misc_sim_sensor[C_MX-1+i] = torque_local[i];
+    misc_sim_sensor[S_FX-1+i] = force_local[i];
+    misc_sim_sensor[S_MX-1+i] = torque_local[i];
   }
   
   

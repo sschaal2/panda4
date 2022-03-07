@@ -35,11 +35,19 @@ include_directories(BEFORE ../include)
 include_directories(BEFORE ../src)
 include_directories(BEFORE ../math)
 include_directories(BEFORE ../../libfranka/include)
+include_directories(BEFORE /usr/include/eigen3)
+include_directories(BEFORE ../../SOEM/install/include/soem)
+
 
 if($ENV{HOST} MATCHES ${PANDA_HOST})
+  link_directories(AFTER ../..//SOEM/install/lib)
   add_definitions(-DPANDA)
   link_directories($ENV{LAB_ROOT}/libfranka/build ${CMAKE_LIBRARY_PATH})
 endif()
+
+# endeffector different from standard Franka
+add_definitions(-DAXIA80)
+add_definitions(-DROBOTIQ2F)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -85,12 +93,6 @@ set(SRCS_XVISION
 	${SRCS_COMMON}
 	)
 
-set(SRCS_XRPROBOT
-	panda_servo_unix.cpp 
-	SL_user_common.c 
-	$ENV{PROG_ROOT}/SL/src/SL_kinematics.c 
-	)
-
 set(SRCS_OPENGL SL_user_openGL.c)
 set(SRCS_TASK SL_user_task.c)
 set(SRCS_SIMULATION SL_user_simulation.c)
@@ -121,14 +123,3 @@ install(TARGETS "${NAME}_task" ARCHIVE DESTINATION ${LAB_LIBDIR})
 
 add_library("${NAME}_simulation" ${SRCS_SIMULATION})
 install(TARGETS "${NAME}_simulation" ARCHIVE DESTINATION ${LAB_LIBDIR})
-
-
-if($ENV{HOST} MATCHES ${PANDA_HOST})
-
-  add_executable("xr${NAME}" ${SRC_XRMAIN})
-  target_link_libraries("xr${NAME}" SLcommon utility ${LAB_STD_LIBS})
-
-  add_executable(xrprobot ${SRCS_XRPROBOT})
-  target_link_libraries(xrprobot franka SLcommon utility  rt ${LAB_STD_LIBS})
-
-endif()

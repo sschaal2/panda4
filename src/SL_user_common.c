@@ -68,6 +68,12 @@ char misc_sensor_names[][20] = {
   {"C_MX"}, 
   {"C_MY"}, 
   {"C_MZ"},
+  {"S_FX"}, 
+  {"S_FY"}, 
+  {"S_FZ"}, 
+  {"S_MX"}, 
+  {"S_MY"}, 
+  {"S_MZ"},
   {"G_WIDTH"},
   {"G_MOTION"}, 
 
@@ -111,7 +117,11 @@ setDefaultEndeffector(void) {
     endeff[i].mcm[_Z_]= 0.0;
     endeff[i].x[_X_]  = 0.0;
     endeff[i].x[_Y_]  = 0.0;
-    endeff[i].x[_Z_]  = FL+FINGER_OFF+FINGER_LENGTH; 
+#ifdef ROBOTIQ2F
+    endeff[i].x[_Z_]  = FL+0.235; // this is the Axia80+Robotiq2f total length
+#else
+    endeff[i].x[_Z_]  = FL+FINGER_OFF+FINGER_LENGTH;
+#endif
     endeff[i].a[_A_]  = 0.0;
     endeff[i].a[_B_]  = 0.0;
     endeff[i].a[_G_]  = FL_G;

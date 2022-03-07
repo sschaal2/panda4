@@ -105,7 +105,8 @@ read_user_sensors(SL_Jstate *raw,double *misc_raw)
     if (real_robot_flag) { 
       // get load from Panda
       raw[i].load = joint_sim_state[i].load;
-      // the panda_servo returns the uff+gravity
+      // the panda_servo returns the original uff + gravity from Franka
+      // model. Thus, the uff is updated to reflect the complete uff signal.
       uff_complete[i] = joint_sim_state[i].uff;
     } else {
       // just pretend load = command
@@ -332,7 +333,9 @@ user_controller(double *u, double *ufb, double *uff)
       //printf("%d.%f\n",i,js_des_local[i].uff);
     }
 
-  } else {  // for the real robot update the uff from panda; this is one tickdelayed info
+  } else {  // For the real robot update the uff from panda for book keeping; this is one tick
+            // delayed info, and is only used for logging. The actual command u is unchanged
+            // as the Panda adds gravity by itself
 
     for (i=1; i<=N_DOFS; ++i) {
       uff[i] = uff_complete[i];
