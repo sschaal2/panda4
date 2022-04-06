@@ -1303,6 +1303,10 @@ compute_ft_offsets(void)
   long   last_panda_servo_calls = panda_servo_calls;
 
   
+  // zero the axia80
+  axia80_ptr->TareAxia80();
+
+  // zero computed f/t
   for (i=1; i<= count; ++i) {
     
     while (last_panda_servo_calls == panda_servo_calls) {
@@ -1318,8 +1322,6 @@ compute_ft_offsets(void)
   for (j=1; j<=2*N_CART; ++j)
     misc_trans_sensors[C_FX-1+j].offset = -data[j]/(double)count;
 
-  // zero the axia80
-  axia80_ptr->TareAxia80();
 
   
 }
