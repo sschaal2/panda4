@@ -311,11 +311,13 @@ main(int argc, char**argv)
       // read the axia load cell and fix orientation offset of load cell relative to gripper coordinates
       ethercat_mod.RunEthercat();
       axia80.ReadAxia80Data(&data,ft_in_units);
-      raw_misc_sensors[S_FX] =  ft_in_units[1] * cos(PI/12.) - ft_in_units[0] * sin(PI/12.);;
+      raw_misc_sensors[S_FX] =  ft_in_units[1] * cos(PI/12.) - ft_in_units[0] * sin(PI/12.);
       raw_misc_sensors[S_FY] = -ft_in_units[0] * cos(PI/12.) - ft_in_units[1] * sin(PI/12.);
       raw_misc_sensors[S_FZ] =  ft_in_units[2];
-      raw_misc_sensors[S_MX] =  ft_in_units[4];
-      raw_misc_sensors[S_MY] = -ft_in_units[3];
+      //      raw_misc_sensors[S_MX] =  ft_in_units[4];
+      //      raw_misc_sensors[S_MY] = -ft_in_units[3];
+      raw_misc_sensors[S_MX] =  ft_in_units[4] * cos(PI/12.) - ft_in_units[3] * sin(PI/12.);
+      raw_misc_sensors[S_MY] = -ft_in_units[3] * cos(PI/12.) - ft_in_units[4] * sin(PI/12.);
       raw_misc_sensors[S_MZ] =  ft_in_units[5];
 #else
       // just pretend the sensed load cell is identical to the computed one
@@ -1305,6 +1307,10 @@ compute_ft_offsets(void)
   long   last_panda_servo_calls = panda_servo_calls;
 
   
+  // zero the axia80
+  axia80_ptr->TareAxia80();
+
+  // zero computed f/t
   for (i=1; i<= count; ++i) {
     
     while (last_panda_servo_calls == panda_servo_calls) {
@@ -1320,8 +1326,6 @@ compute_ft_offsets(void)
   for (j=1; j<=2*N_CART; ++j)
     misc_trans_sensors[C_FX-1+j].offset = -data[j]/(double)count;
 
-  // zero the axia80
-  axia80_ptr->TareAxia80();
 
   
 }
