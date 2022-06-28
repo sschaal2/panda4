@@ -1,1 +1,1 @@
-panda_ForDynComp_declare.h
+panda4_ForDynComp_declare.h

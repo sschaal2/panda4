@@ -26,18 +26,47 @@
 // global variables
 char joint_names[][20]= {
   {"BASE"},
-  {"J1"},
-  {"J2"},
-  {"J3"},
-  {"J4"},
-  {"J5"},
-  {"J6"},
-  {"J7"}
+  
+  {"A1_J1"},
+  {"A1_J2"},
+  {"A1_J3"},
+  {"A1_J4"},
+  {"A1_J5"},
+  {"A1_J6"},
+  {"A1_J7"},
+  
+  {"A2_J1"},
+  {"A2_J2"},
+  {"A2_J3"},
+  {"A2_J4"},
+  {"A2_J5"},
+  {"A2_J6"},
+  {"A2_J7"},
+  
+  {"A3_J1"},
+  {"A3_J2"},
+  {"A3_J3"},
+  {"A3_J4"},
+  {"A3_J5"},
+  {"A3_J6"},
+  {"A3_J7"},
+  
+  {"A4_J1"},
+  {"A4_J2"},
+  {"A4_J3"},
+  {"A4_J4"},
+  {"A4_J5"},
+  {"A4_J6"},
+  {"A4_J7"}
+  
 };
 
 char cart_names[][20]= {
   {"dummy"},
-  {"HAND"},
+  {"A1_HAND"},
+  {"A2_HAND"},
+  {"A3_HAND"},
+  {"A4_HAND"}  
 };
 
 char blob_names[][20]= {
@@ -52,38 +81,106 @@ char blob_names[][20]= {
 
 char link_names[][20]= {
   {"BASE"},
-  {"J2_LINK"},
-  {"J3_LINK"},
-  {"J4_LINK"},
-  {"J5_LINK"},
-  {"J7_LINK"},
-  {"FLANGE"}
+  
+  {"A1_J1_LINK"},
+  {"A1_J3_LINK"},
+  {"A1_J4_LINK"},
+  {"A1_J5_LINK"},
+  {"A1_J7_LINK"},
+  {"A1_FLANGE"},
+
+  {"A2_J1_LINK"},
+  {"A2_J3_LINK"},
+  {"A2_J4_LINK"},
+  {"A2_J5_LINK"},
+  {"A2_J7_LINK"},
+  {"A2_FLANGE"},
+
+  {"A3_J1_LINK"},
+  {"A3_J3_LINK"},
+  {"A3_J4_LINK"},
+  {"A3_J5_LINK"},
+  {"A3_J7_LINK"},
+  {"A3_FLANGE"},
+
+  {"A4_J1_LINK"},
+  {"A4_J3_LINK"},
+  {"A4_J4_LINK"},
+  {"A4_J5_LINK"},
+  {"A4_J7_LINK"},
+  {"A4_FLANGE"},
 };
 
 char misc_sensor_names[][20] = {
   {"dummy"},
-  {"C_FX"}, 
-  {"C_FY"}, 
-  {"C_FZ"}, 
-  {"C_MX"}, 
-  {"C_MY"}, 
-  {"C_MZ"},
-  {"S_FX"}, 
-  {"S_FY"}, 
-  {"S_FZ"}, 
-  {"S_MX"}, 
-  {"S_MY"}, 
-  {"S_MZ"},
-  {"G_WIDTH"},
-  {"G_MOTION"}, 
+  
+  {"A1_C_FX"}, 
+  {"A1_C_FY"}, 
+  {"A1_C_FZ"}, 
+  {"A1_C_MX"}, 
+  {"A1_C_MY"}, 
+  {"A1_C_MZ"},
+  {"A1_S_FX"}, 
+  {"A1_S_FY"}, 
+  {"A1_S_FZ"}, 
+  {"A1_S_MX"}, 
+  {"A1_S_MY"}, 
+  {"A1_S_MZ"},
+  {"A1_G_WIDTH"},
+  {"A1_G_MOTION"}, 
 
+  {"A2_C_FX"}, 
+  {"A2_C_FY"}, 
+  {"A2_C_FZ"}, 
+  {"A2_C_MX"}, 
+  {"A2_C_MY"}, 
+  {"A2_C_MZ"},
+  {"A2_S_FX"}, 
+  {"A2_S_FY"}, 
+  {"A2_S_FZ"}, 
+  {"A2_S_MX"}, 
+  {"A2_S_MY"}, 
+  {"A2_S_MZ"},
+  {"A2_G_WIDTH"},
+  {"A2_G_MOTION"}, 
+
+  {"A3_C_FX"}, 
+  {"A3_C_FY"}, 
+  {"A3_C_FZ"}, 
+  {"A3_C_MX"}, 
+  {"A3_C_MY"}, 
+  {"A3_C_MZ"},
+  {"A3_S_FX"}, 
+  {"A3_S_FY"}, 
+  {"A3_S_FZ"}, 
+  {"A3_S_MX"}, 
+  {"A3_S_MY"}, 
+  {"A3_S_MZ"},
+  {"A3_G_WIDTH"},
+  {"A3_G_MOTION"}, 
+
+  {"A4_C_FX"}, 
+  {"A4_C_FY"}, 
+  {"A4_C_FZ"}, 
+  {"A4_C_MX"}, 
+  {"A4_C_MY"}, 
+  {"A4_C_MZ"},
+  {"A4_S_FX"}, 
+  {"A4_S_FY"}, 
+  {"A4_S_FZ"}, 
+  {"A4_S_MX"}, 
+  {"A4_S_MY"}, 
+  {"A4_S_MZ"},
+  {"A4_G_WIDTH"},
+  {"A4_G_MOTION"}, 
+  
 };
 
 // the 1st to 2nd finger segment angles
 
 
 // initialization needs to be done for this mapping
-int  link2endeffmap[] = {0,FLANGE};
+int  link2endeffmap[] = {0,A1_FLANGE,A2_FLANGE,A3_FLANGE,A4_FLANGE};
 
 
 /* the following include must be the last line of the variable declaration section */

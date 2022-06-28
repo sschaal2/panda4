@@ -344,14 +344,54 @@ myDrawGLElement(int num, double length, int flag)
 
   switch (num) {
 
-  case J1: 
+  case A1_J1:
+    glPopMatrix();
+    glPushMatrix();
+    glTranslated(A1X,A1Y,0.0);    
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
     glColor4fv(gray);
     glRotated((GLdouble)90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
+    glRotated((GLdouble)A1G*180./PI,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);    
     glCallList(link0);
     break;
 
-  case J2: 
+  case A2_J1:
+    glPopMatrix();
+    glPushMatrix();
+    glTranslated(A2X,A2Y,0.0);    
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
+    glColor4fv(gray);
+    glRotated((GLdouble)90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
+    glRotated((GLdouble)A2G*180./PI,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);    
+    glCallList(link0);
+    break;
+
+  case A3_J1:
+    glPopMatrix();
+    glPushMatrix();
+    glTranslated(A3X,A3Y,0.0);    
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
+    glColor4fv(gray);
+    glRotated((GLdouble)90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
+    glRotated((GLdouble)A3G*180./PI,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);    
+    glCallList(link0);
+    break;
+
+  case A4_J1:     
+    glPopMatrix();
+    glPushMatrix();
+    glTranslated(A4X,A4Y,0.0);    
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
+    glColor4fv(gray);
+    glRotated((GLdouble)90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
+    glRotated((GLdouble)A4G*180./PI,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);    
+    glCallList(link0);
+    break;
+
+  case A1_J2:
+  case A2_J2:
+  case A3_J2:
+  case A4_J2:     
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
     glColor4fv(gray);
     //glTranslated(0.00,0.00,0.008);
@@ -359,14 +399,20 @@ myDrawGLElement(int num, double length, int flag)
     glCallList(link1);
     break;
 
-  case J3: 
+  case A1_J3:
+  case A2_J3:
+  case A3_J3:
+  case A4_J3:     
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
     glColor4fv(gray);
     glRotated((GLdouble)180.,(GLdouble)0.,(GLdouble)0.,(GLdouble)1.);
     glCallList(link2);
     break;
 
-  case J4: 
+  case A1_J4:
+  case A2_J4:
+  case A3_J4:
+  case A4_J4:         
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
     glColor4fv(gray);
     glRotated((GLdouble)-90.,(GLdouble)0.,(GLdouble)0.,(GLdouble)1.);
@@ -374,7 +420,10 @@ myDrawGLElement(int num, double length, int flag)
     glCallList(link3);
     break;
 
-  case J5: 
+  case A1_J5:
+  case A2_J5:
+  case A3_J5:
+  case A4_J5:     
     glPopMatrix();
     glPushMatrix();
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
@@ -383,14 +432,20 @@ myDrawGLElement(int num, double length, int flag)
     glCallList(link4);
     break;
 
-  case J6: 
+  case A1_J6:
+  case A2_J6:
+  case A3_J6:
+  case A4_J6:     
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
     glRotated((GLdouble)90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
     glColor4fv(gray);
     glCallList(link5);
     break;
 
-  case J7: 
+  case A1_J7:
+  case A2_J7:
+  case A3_J7:
+  case A4_J7:    
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
     glColor4fv(gray);
     glRotated((GLdouble)-90.,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);
@@ -398,7 +453,12 @@ myDrawGLElement(int num, double length, int flag)
     glCallList(link6);
     break;
 
+
   case 108:
+  case 115:
+  case 122:
+  case 129:
+    /*
     glPushMatrix();
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
     glColor4fv(gray);
@@ -408,10 +468,17 @@ myDrawGLElement(int num, double length, int flag)
     glRotated((GLdouble)-45.,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);
     glCallList(hand);
     glTranslated(0.0,FINGER_OFF,0.0);
-    glTranslated(0.0,0.0,-misc_sim_sensor[G_WIDTH]/2.);
+    glTranslated(0.0,0.0,-misc_sim_sensor[A1_G_WIDTH]/2.);
     glCallList(finger);
     glRotated((GLdouble)180.,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);
-    glTranslated(0.0,0.0,-misc_sim_sensor[G_WIDTH]);
+    if (num == 108)
+      glTranslated(0.0,0.0,-misc_sim_sensor[A1_G_WIDTH]);
+    else if (num == 115)
+      glTranslated(0.0,0.0,-misc_sim_sensor[A2_G_WIDTH]);      
+    else if (num == 122)
+      glTranslated(0.0,0.0,-misc_sim_sensor[A3_G_WIDTH]);      
+    else if (num == 129)
+      glTranslated(0.0,0.0,-misc_sim_sensor[A4_G_WIDTH]);      
     glCallList(finger);
     glPopMatrix();
 
@@ -428,6 +495,15 @@ myDrawGLElement(int num, double length, int flag)
       glutWireCube(1.0);
 
     break;
+    */
+    glScaled(width/5.,width/5.,length);
+    glColor4fv(gray);
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
+    if (solid)
+      glutSolidCylinder(1.0,1.0,isphere,1);
+    else
+      glutWireCylinder(1.0,1.0,isphere,1);
+    
 
   default:
 
@@ -502,7 +578,7 @@ none
 static void
 drawForceTorqueSensor(void)
 {
-  int i,j,n;
+  int i,j,n,k;
   double f[N_CART+1];
   double t[N_CART+1];
   double fscale_N=0.025;
@@ -511,57 +587,68 @@ drawForceTorqueSensor(void)
   double e[N_CART+1];
   double arrow_width = 0.01;
   double off_local[N_CART+1];
-  double off_global[N_CART+1];    
+  double off_global[N_CART+1];
+  int    s_f_indices[] = {0,A1_S_FX,A2_S_FX,A3_S_FX,A4_S_FX};
+  int    s_m_indices[] = {0,A1_S_MX,A2_S_MX,A3_S_MX,A4_S_MX};
+  int    flange_indices[] = {0,A1_FLANGE,A2_FLANGE,A3_FLANGE,A4_FLANGE};
+  int    j7_link_indices[] = {0,A1_J7_LINK,A2_J7_LINK,A3_J7_LINK,A4_J7_LINK};
 
-  // rotate the force torque info to world coordinates
-  for (i=1; i<=N_CART; ++i) {
-    f[i] = 0.;
-    t[i] = 0.;
-    for (j=1; j<=N_CART; ++j) {
-      f[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[S_FX-1+j];
-      t[i] += Alink_sim[FLANGE][i][j]*misc_sim_sensor[S_MX-1+j];
+  // loop over all endeffectors
+  for (k=1; k<=N_ENDEFFS; ++k) {
+
+    // rotate the force torque info to world coordinates
+    for (i=1; i<=N_CART; ++i) {
+      f[i] = 0.;
+      t[i] = 0.;
+      for (j=1; j<=N_CART; ++j) {
+	f[i] += Alink_sim[flange_indices[k]][i][j]*misc_sim_sensor[s_f_indices[k]-1+j];
+	t[i] += Alink_sim[flange_indices[k]][i][j]*misc_sim_sensor[s_m_indices[k]-1+j];
+      }
     }
-  }
 
-  // offset vector of load cell relative to J7_LINK
-  vec_zero_size(off_local,N_CART);
-  off_local[_Z_] = FL+FT_OFF_Z;
-  for (i=1; i<=N_CART; ++i) {
-    off_global[i] = 0.;
-    for (j=1; j<=N_CART; ++j) {
-      off_global[i] += Alink_sim[FLANGE][i][j]*off_local[j];
+    // offset vector of load cell relative to J7_LINK
+    vec_zero_size(off_local,N_CART);
+    off_local[_Z_] = FL+FT_OFF_Z;
+    for (i=1; i<=N_CART; ++i) {
+      off_global[i] = 0.;
+      for (j=1; j<=N_CART; ++j) {
+	off_global[i] += Alink_sim[flange_indices[k]][i][j]*off_local[j];
+      }
     }
+
+    glPushMatrix();
+    
+    // move to the force torque sensor
+    glTranslated(link_pos_sim[j7_link_indices[k]][_X_],
+		 link_pos_sim[j7_link_indices[k]][_Y_],
+		 link_pos_sim[j7_link_indices[k]][_Z_]);
+    glTranslated(off_global[_X_],off_global[_Y_],off_global[_Z_]);
+
+
+    // the start and end point of the force vector
+    s[_X_] =  0.0;
+    s[_Y_] =  0.0;
+    s[_Z_] =  0.0;
+    
+    e[_X_] = s[_X_] + f[_X_]*fscale_N;
+    e[_Y_] = s[_Y_] + f[_Y_]*fscale_N;
+    e[_Z_] = s[_Z_] + f[_Z_]*fscale_N;
+    
+    
+    glColor4f (0.8,1.0,1.0,1.0);      
+    drawArrow(s,e,arrow_width);
+    
+    e[_X_] = s[_X_] + t[_X_]*fscale_Nm;
+    e[_Y_] = s[_Y_] + t[_Y_]*fscale_Nm;
+    e[_Z_] = s[_Z_] + t[_Z_]*fscale_Nm;
+    
+    
+    glColor4f (0.8,0.4,0.0,1.0);
+    drawArrow(s,e,arrow_width);
+    
+    glPopMatrix();
+
   }
-
-  glPushMatrix();
-    
-  // move to the force torque sensor
-  glTranslated(link_pos_sim[J7_LINK][_X_],link_pos_sim[J7_LINK][_Y_],link_pos_sim[J7_LINK][_Z_]);
-  glTranslated(off_global[_X_],off_global[_Y_],off_global[_Z_]);
-
-
-  // the start and end point of the force vector
-  s[_X_] =  0.0;
-  s[_Y_] =  0.0;
-  s[_Z_] =  0.0;
-
-  e[_X_] = s[_X_] + f[_X_]*fscale_N;
-  e[_Y_] = s[_Y_] + f[_Y_]*fscale_N;
-  e[_Z_] = s[_Z_] + f[_Z_]*fscale_N;
-
-
-  glColor4f (0.8,1.0,1.0,1.0);      
-  drawArrow(s,e,arrow_width);
-
-  e[_X_] = s[_X_] + t[_X_]*fscale_Nm;
-  e[_Y_] = s[_Y_] + t[_Y_]*fscale_Nm;
-  e[_Z_] = s[_Z_] + t[_Z_]*fscale_Nm;
-
-    
-  glColor4f (0.8,0.4,0.0,1.0);
-  drawArrow(s,e,arrow_width);
-
-  glPopMatrix();
 
 }
 

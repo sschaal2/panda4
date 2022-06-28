@@ -36,23 +36,23 @@ include_directories(BEFORE ../src)
 include_directories(BEFORE ../math)
 include_directories(BEFORE ../../libfranka/include)
 include_directories(BEFORE /usr/include/eigen3)
-include_directories(BEFORE ../../SOEM/install/include/soem)
+#include_directories(BEFORE ../../SOEM/install/include/soem)
 
 
 if($ENV{HOST} MATCHES ${PANDA_HOST})
-  link_directories(AFTER ../..//SOEM/install/lib)
+#  link_directories(AFTER ../..//SOEM/install/lib)
   add_definitions(-DPANDA)
   link_directories($ENV{LAB_ROOT}/libfranka/build ${CMAKE_LIBRARY_PATH})
 endif()
 
 # endeffector different from standard Franka
-add_definitions(-DAXIA80)
-add_definitions(-DROBOTIQ2F)
+#add_definitions(-DAXIA80)
+#add_definitions(-DROBOTIQ2F)
 
 set(CMAKE_CXX_STANDARD 11)
 
 # robot name
-set(NAME panda)
+set(NAME panda4)
 
 # ------------------------------------------------------------------------
 
