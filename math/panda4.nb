@@ -1,0 +1,190 @@
+(* Content-type: application/mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 6.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       145,          7]
+NotebookDataLength[      7555,        182]
+NotebookOptionsPosition[      5764,        148]
+NotebookOutlinePosition[      6481,        172]
+CellTagsIndexPosition[      6438,        169]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+  "SetDirectory", "[", 
+   "\"\</Volumes/vangogh/sschaal/Documents/Math/ControlTheory\>\"", "]"}], 
+  ";"}]], "Input",
+ CellLabel->"In[1]:=",ExpressionUUID->"5d666bd0-18ab-4b3e-878a-f032ff2cc043"],
+
+Cell[BoxData[
+ RowBox[{"<<", "RigidBodyDynamics.m"}]], "Input",
+ AspectRatioFixed->True,
+ CellLabel->"In[2]:=",ExpressionUUID->"60dac243-6f04-4f9e-a7fa-b6c453af26b7"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"SetDirectory", "[", "\"\<panda4\>\"", "]"}], ";"}]], "Input",
+ CellChangeTimes->{
+  3.5483665769714537`*^9, 3.756420496760165*^9, {3.864513216742777*^9, 
+   3.86451323282633*^9}},ExpressionUUID->"2a5184e6-616a-4a7e-9fd3-\
+0b4c8a8cfc00"],
+
+Cell[BoxData[
+ RowBox[{"InvDynNE", "[", 
+  RowBox[{"\"\<panda4.dyn\>\"", ",", "\"\<panda4\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", 
+     RowBox[{"-", "gravityLocal"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.494468409706417*^9, 3.4944684098074217`*^9}, {
+   3.548366577007745*^9, 3.5483665770361843`*^9}, {3.756420346521284*^9, 
+   3.756420347116725*^9}, {3.756420392514059*^9, 3.756420424147789*^9}, {
+   3.75642049676684*^9, 3.756420496770116*^9}, 3.756424465917096*^9, {
+   3.756490858322598*^9, 3.7564908588849688`*^9}, {3.864513229815425*^9, 
+   3.864513229815895*^9}},
+ AspectRatioFixed->
+  True,ExpressionUUID->"045dcb22-68b2-4041-af7a-58413935b0e5"],
+
+Cell[BoxData[
+ RowBox[{"InvDynArt", "[", 
+  RowBox[{"\"\<panda4.dyn\>\"", ",", "\"\<panda4\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", " ", 
+     RowBox[{"-", "gravity"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.5483665770706882`*^9, 3.548366577105336*^9}, {
+   3.756420351872316*^9, 3.756420352424817*^9}, {3.756420442750024*^9, 
+   3.756420444333178*^9}, {3.756420496775202*^9, 3.756420496778137*^9}, 
+   3.75642446853979*^9, {3.864513229816539*^9, 
+   3.864513229816996*^9}},ExpressionUUID->"22f47470-e174-4624-9f09-\
+f7bc342e9b13"],
+
+Cell[BoxData[
+ RowBox[{"ParmEst", "[", 
+  RowBox[{"\"\<panda4.dyn\>\"", ",", "\"\<panda4\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", 
+     RowBox[{"-", "gravity"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.5483665771368713`*^9, 3.548366577172202*^9}, {
+  3.756420496782879*^9, 3.7564204967857523`*^9}, {3.864513229818996*^9, 
+  3.864513229819467*^9}},ExpressionUUID->"4ff837ba-1ac9-437c-9793-\
+c57bb3a71fcc"],
+
+Cell[BoxData[
+ RowBox[{"ForDynArt", "[", 
+  RowBox[{"\"\<panda4.dyn\>\"", ",", "\"\<panda4\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", 
+     RowBox[{"-", "gravity"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.4944684175517683`*^9, 3.494468417959557*^9}, {
+  3.5483665772082567`*^9, 3.548366577235998*^9}, {3.7564204967911377`*^9, 
+  3.75642049679562*^9}, {3.864513229821498*^9, 3.86451322982198*^9}},
+ AspectRatioFixed->
+  True,ExpressionUUID->"985fa6dd-209d-431e-8989-e81da3b41e56"],
+
+Cell[BoxData[
+ RowBox[{"ForDynComp", "[", 
+  RowBox[{"\"\<panda4.dyn\>\"", ",", "\"\<panda4\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"0", ",", "0", ",", 
+     RowBox[{"-", "gravity"}]}], "}"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.548366577270249*^9, 3.54836657730694*^9}, {
+  3.75642049680072*^9, 3.756420496803749*^9}, {3.864513229824172*^9, 
+  3.864513229824663*^9}},
+ AspectRatioFixed->
+  True,ExpressionUUID->"28d85626-dd58-42a9-9b0a-ecbaf5d2a799"],
+
+Cell[BoxData[
+ RowBox[{"LinkEndpointKinematics", "[", 
+  RowBox[{"\"\<panda4.dyn\>\"", ",", "\"\<panda4\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.548366577336236*^9, 3.548366577372787*^9}, {
+  3.756420496808312*^9, 3.756420496811089*^9}, {3.86451322982663*^9, 
+  3.864513229827096*^9}},
+ AspectRatioFixed->
+  True,ExpressionUUID->"537b6437-8c97-4055-96d6-c96b8a751433"],
+
+Cell[BoxData[
+ RowBox[{"OpenGLKinematics", "[", 
+  RowBox[{"\"\<panda4.dyn\>\"", ",", "\"\<panda4\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.5483665774042683`*^9, 3.548366577436838*^9}, {
+  3.756420496815456*^9, 3.7564204968181334`*^9}, {3.8645132298290787`*^9, 
+  3.8645132298295403`*^9}},ExpressionUUID->"05f58fca-3fbc-4299-b2ff-\
+d7f6c6156f74"],
+
+Cell[BoxData[
+ RowBox[{"GeometricJacobian", "[", 
+  RowBox[{"\"\<panda4.dyn\>\"", ",", 
+   RowBox[{"{", 
+    RowBox[{"108", ",", "115", ",", "122", ",", "129"}], "}"}], ",", 
+   "\"\<panda4\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.548366577472628*^9, 3.5483665775030727`*^9}, {
+  3.756420496822412*^9, 3.7564204968248253`*^9}, {3.8645132298315372`*^9, 
+  3.8645133114874563`*^9}},ExpressionUUID->"a97698d1-bf11-41b7-a7fb-\
+362e3d219663"],
+
+Cell[BoxData[
+ RowBox[{"InertiaMatrix", "[", 
+  RowBox[{"\"\<panda4.dyn\>\"", ",", "\"\<panda4\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.548366577539706*^9, 3.548366577570058*^9}, {
+  3.756420496828857*^9, 3.756420496831476*^9}, {3.8645132298339987`*^9, 
+  3.8645132298344593`*^9}},ExpressionUUID->"f4035c1c-fa26-45c1-ad59-\
+97f4369bf7b5"],
+
+Cell[BoxData[
+ RowBox[{"LinkInformation", "[", 
+  RowBox[{"\"\<panda4.dyn\>\"", ",", "\"\<panda4\>\""}], "]"}]], "Input",
+ CellChangeTimes->{{3.5483665776069727`*^9, 3.5483665776398697`*^9}, {
+  3.75642049683667*^9, 3.7564204968403883`*^9}, {3.8645132298364487`*^9, 
+  3.8645132298369083`*^9}},ExpressionUUID->"d81f0817-d2a0-4fbc-addf-\
+264f92beb15a"]
+},
+WindowToolbars->{},
+CellGrouping->Automatic,
+WindowSize->{867, 771},
+WindowMargins->{{466, Automatic}, {Automatic, 163}},
+PrivateNotebookOptions->{"VersionedStylesheet"->{"Default.nb"[8.] -> False}},
+ShowCellLabel->True,
+ShowCellTags->False,
+FrontEndVersion->"12.0 for Mac OS X x86 (64-bit) (April 8, 2019)",
+StyleDefinitions->"Default.nb",
+PrivateNotebookOptions -> {"ColorPalette" -> {RGBColor, 128}},
+RenderingOptions -> {"ObjectDithering" -> True},
+RenderingOptions -> {"RasterDithering" -> False},
+CharacterEncoding -> "MacintoshAutomaticEncoding"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[545, 20, 231, 6, 30, "Input",ExpressionUUID->"5d666bd0-18ab-4b3e-878a-f032ff2cc043"],
+Cell[779, 28, 166, 3, 30, "Input",ExpressionUUID->"60dac243-6f04-4f9e-a7fa-b6c453af26b7"],
+Cell[948, 33, 271, 6, 30, "Input",ExpressionUUID->"2a5184e6-616a-4a7e-9fd3-0b4c8a8cfc00"],
+Cell[1222, 41, 687, 13, 30, "Input",ExpressionUUID->"045dcb22-68b2-4041-af7a-58413935b0e5"],
+Cell[1912, 56, 562, 11, 30, "Input",ExpressionUUID->"22f47470-e174-4624-9f09-f7bc342e9b13"],
+Cell[2477, 69, 434, 9, 30, "Input",ExpressionUUID->"4ff837ba-1ac9-437c-9793-c57bb3a71fcc"],
+Cell[2914, 80, 508, 10, 30, "Input",ExpressionUUID->"985fa6dd-209d-431e-8989-e81da3b41e56"],
+Cell[3425, 92, 457, 10, 30, "Input",ExpressionUUID->"28d85626-dd58-42a9-9b0a-ecbaf5d2a799"],
+Cell[3885, 104, 374, 7, 30, "Input",ExpressionUUID->"537b6437-8c97-4055-96d6-c96b8a751433"],
+Cell[4262, 113, 351, 6, 30, "Input",ExpressionUUID->"05f58fca-3fbc-4299-b2ff-d7f6c6156f74"],
+Cell[4616, 121, 443, 9, 30, "Input",ExpressionUUID->"a97698d1-bf11-41b7-a7fb-362e3d219663"],
+Cell[5062, 132, 344, 6, 30, "Input",ExpressionUUID->"f4035c1c-fa26-45c1-ad59-97f4369bf7b5"],
+Cell[5409, 140, 351, 6, 30, "Input",ExpressionUUID->"d81f0817-d2a0-4fbc-addf-264f92beb15a"]
+}
+]
+*)
+

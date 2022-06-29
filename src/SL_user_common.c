@@ -108,7 +108,7 @@ char link_names[][20]= {
   {"A4_J4_LINK"},
   {"A4_J5_LINK"},
   {"A4_J7_LINK"},
-  {"A4_FLANGE"},
+  {"A4_FLANGE"}
 };
 
 char misc_sensor_names[][20] = {
@@ -172,7 +172,7 @@ char misc_sensor_names[][20] = {
   {"A4_S_MY"}, 
   {"A4_S_MZ"},
   {"A4_G_WIDTH"},
-  {"A4_G_MOTION"}, 
+  {"A4_G_MOTION"}
   
 };
 
@@ -254,7 +254,7 @@ setRealRobotOptions(void)
   // update the config file names
   read_config_files(config_files[CONFIGFILES]);
 
-  // set NE gravity to zero to mimic the way Franke is automically adding gravity comp
+  // set NE gravity to zero to mimic the way Franka is automically adding gravity comp
   set_NE_local_gravity(0.0);
   
   return;

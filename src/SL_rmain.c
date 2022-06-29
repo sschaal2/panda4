@@ -53,8 +53,14 @@ main(int argc, char**argv)
 {
   int no_arm_flag = FALSE;
   int no_hand_flag = FALSE;
+  int robot_id_argv;
 
 #include "SL_user_main_core.h"
+
+  // the robot id flag
+  sprintf(argv_array[c++],"-id");
+  robot_id_argv = c;
+  sprintf(argv_array[c++],"%d",1);  
 
   // the real-time flag
   sprintf(argv_array[c++],"-rt");
@@ -137,7 +143,7 @@ main(int argc, char**argv)
     semTake(sm_init_process_ready_sem,WAIT_FOREVER);
   }
 
-  // the panda robot
+  // the panda robots
   if (fork() == 0) {
     sprintf(argv_ptr[geometry_argv],"90x8+%d+30",display_width-delta_width);
     if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
@@ -147,10 +153,57 @@ main(int argc, char**argv)
     sprintf(argv_ptr[background_argv],"LightGray");
     sprintf(argv_ptr[servo_argv],"xrprobot");
     sprintf(argv_ptr[nice_argv],"0");
+    sprintf(argv_ptr[robot_id_argv],"1");    
     execvp("xterm",argv_ptr);
     exit(-1);
   }
+  //semTake(sm_init_process_ready_sem,WAIT_FOREVER);
+  /*  
+  if (fork() == 0) {
+    sprintf(argv_ptr[geometry_argv],"90x8+%d+30",display_width-delta_width);
+    if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
+				   "panda_servo_geometry", string))
+      if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
+	strcpy(argv_ptr[geometry_argv],xstring);
+    sprintf(argv_ptr[background_argv],"LightGray");
+    sprintf(argv_ptr[servo_argv],"xrprobot");
+    sprintf(argv_ptr[nice_argv],"0");
+    sprintf(argv_ptr[robot_id_argv],"3");    
+    execvp("xterm",argv_ptr);
+    exit(-1);
+  }
+  semTake(sm_init_process_ready_sem,WAIT_FOREVER);
+  
+  if (fork() == 0) {
+    sprintf(argv_ptr[geometry_argv],"90x8+%d+30",display_width-delta_width);
+    if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
+				   "panda_servo_geometry", string))
+      if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
+	strcpy(argv_ptr[geometry_argv],xstring);
+    sprintf(argv_ptr[background_argv],"LightGray");
+    sprintf(argv_ptr[servo_argv],"xrprobot");
+    sprintf(argv_ptr[nice_argv],"0");
+    sprintf(argv_ptr[robot_id_argv],"2");        
+    execvp("xterm",argv_ptr);
+    exit(-1);
+  }
+  semTake(sm_init_process_ready_sem,WAIT_FOREVER);  
 
+  if (fork() == 0) {
+    sprintf(argv_ptr[geometry_argv],"90x8+%d+30",display_width-delta_width);
+    if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
+				   "panda_servo_geometry", string))
+      if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
+	strcpy(argv_ptr[geometry_argv],xstring);
+    sprintf(argv_ptr[background_argv],"LightGray");
+    sprintf(argv_ptr[servo_argv],"xrprobot");
+    sprintf(argv_ptr[nice_argv],"0");
+    sprintf(argv_ptr[robot_id_argv],"1");            
+    execvp("xterm",argv_ptr);
+    exit(-1);
+  }
+  semTake(sm_init_process_ready_sem,WAIT_FOREVER);
+  */
   // monitor dying child process and kill all other if this happens
   waitpid(0,&stat_loc,options);
 
