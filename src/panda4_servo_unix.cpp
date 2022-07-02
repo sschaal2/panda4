@@ -112,7 +112,8 @@ static char            ip_string[20]; // ip of franka robot
 
 static int             change_endeff_flag = FALSE;
 
-static int robot_id=1;
+static int             robot_id=1;
+static int             use_gripper = FALSE;
 
 
 
@@ -259,7 +260,8 @@ main(int argc, char**argv)
   spawnCommandLineThread(NULL);
 
   // spawn gripper thread
-  spawnGripperThread();
+  if (use_gripper)
+    spawnGripperThread();
 
   // initialize Panda robot
   try {
@@ -399,8 +401,9 @@ main(int argc, char**argv)
 
   } catch (const franka::Exception& ex) {
     std::cerr << ex.what() << std::endl;
-    std::cout << "Press Enter to continue..." << std::endl;
-    std::cin.ignore();
+    // need to kills process immediate to kill all other robots
+    // std::cout << "Press Enter to continue..." << std::endl;
+    // std::cin.ignore();
     
     return FALSE;
   } 
@@ -525,6 +528,8 @@ init_panda_servo(franka::Robot &robot)
 
   printf("\nPanda initialized\n");
 
+  // signal that this process is initialized
+  semGive(sm_init_process_ready_sem);
 
   return TRUE;
 }
@@ -1049,6 +1054,9 @@ send_sim_state(void)
 
   if (robot_id == ROBOT_MASTER_CLOCK)
     sm_joint_sim_state->ts = servo_time;
+  else
+    // keep the clock synrnized against master
+    servo_time = sm_joint_sim_state->ts;
   
   semGive(sm_joint_sim_state_sem);
 

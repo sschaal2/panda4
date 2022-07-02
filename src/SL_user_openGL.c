@@ -458,18 +458,18 @@ myDrawGLElement(int num, double length, int flag)
   case 115:
   case 122:
   case 129:
-    /*
     glPushMatrix();
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
     glColor4fv(gray);
     glRotated((GLdouble)90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
     glCallList(link7);
     glTranslated(0.0,FL,0.0);
+    /*
     glRotated((GLdouble)-45.,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);
     glCallList(hand);
     glTranslated(0.0,FINGER_OFF,0.0);
     glTranslated(0.0,0.0,-misc_sim_sensor[A1_G_WIDTH]/2.);
-    glCallList(finger);
+    glCallList(finger);\
     glRotated((GLdouble)180.,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);
     if (num == 108)
       glTranslated(0.0,0.0,-misc_sim_sensor[A1_G_WIDTH]);
@@ -481,9 +481,9 @@ myDrawGLElement(int num, double length, int flag)
       glTranslated(0.0,0.0,-misc_sim_sensor[A4_G_WIDTH]);      
     glCallList(finger);
     glPopMatrix();
-
+    */
     // draw little rod to show the endeffector position
-    glRotated((GLdouble)-45.,(GLdouble)0.,(GLdouble)0.,(GLdouble)1.);
+    glRotated((GLdouble)-90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
     glTranslated(0.0,0.0,length/2.);
     glScaled(0.02,0.01,length);
     glColor4fv(gray);
@@ -495,7 +495,6 @@ myDrawGLElement(int num, double length, int flag)
       glutWireCube(1.0);
 
     break;
-    */
     glScaled(width/5.,width/5.,length);
     glColor4fv(gray);
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);

@@ -20,8 +20,8 @@
 #define ROBOT_NAME "panda4"
 
 // base position of the 4 robots in x,y
-#define BASE_XOFF  0.620
-#define BASE_YOFF  0.620
+#define BASE_XOFF  0.5515
+#define BASE_YOFF  0.6285
 
 #define A1X  (BASE_XOFF)
 #define A1Y  (-BASE_YOFF)

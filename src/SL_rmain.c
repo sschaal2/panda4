@@ -147,22 +147,22 @@ main(int argc, char**argv)
   if (fork() == 0) {
     sprintf(argv_ptr[geometry_argv],"90x8+%d+30",display_width-delta_width);
     if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
-				   "panda_servo_geometry", string))
+				   "panda_4_servo_geometry", string))
       if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
 	strcpy(argv_ptr[geometry_argv],xstring);
     sprintf(argv_ptr[background_argv],"LightGray");
     sprintf(argv_ptr[servo_argv],"xrprobot");
     sprintf(argv_ptr[nice_argv],"0");
-    sprintf(argv_ptr[robot_id_argv],"1");    
+    sprintf(argv_ptr[robot_id_argv],"4");    
     execvp("xterm",argv_ptr);
     exit(-1);
   }
-  //semTake(sm_init_process_ready_sem,WAIT_FOREVER);
-  /*  
+  semTake(sm_init_process_ready_sem,WAIT_FOREVER);
+
   if (fork() == 0) {
     sprintf(argv_ptr[geometry_argv],"90x8+%d+30",display_width-delta_width);
     if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
-				   "panda_servo_geometry", string))
+				   "panda_3_servo_geometry", string))
       if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
 	strcpy(argv_ptr[geometry_argv],xstring);
     sprintf(argv_ptr[background_argv],"LightGray");
@@ -177,7 +177,7 @@ main(int argc, char**argv)
   if (fork() == 0) {
     sprintf(argv_ptr[geometry_argv],"90x8+%d+30",display_width-delta_width);
     if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
-				   "panda_servo_geometry", string))
+				   "panda_2_servo_geometry", string))
       if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
 	strcpy(argv_ptr[geometry_argv],xstring);
     sprintf(argv_ptr[background_argv],"LightGray");
@@ -192,7 +192,7 @@ main(int argc, char**argv)
   if (fork() == 0) {
     sprintf(argv_ptr[geometry_argv],"90x8+%d+30",display_width-delta_width);
     if (read_parameter_pool_string(config_files[PARAMETERPOOL], 
-				   "panda_servo_geometry", string))
+				   "panda_1_servo_geometry", string))
       if (parseWindowSpecs(string, display_width,display_height,xstring, &x, &y, &w, &h))
 	strcpy(argv_ptr[geometry_argv],xstring);
     sprintf(argv_ptr[background_argv],"LightGray");
@@ -203,7 +203,7 @@ main(int argc, char**argv)
     exit(-1);
   }
   semTake(sm_init_process_ready_sem,WAIT_FOREVER);
-  */
+
   // monitor dying child process and kill all other if this happens
   waitpid(0,&stat_loc,options);
 
