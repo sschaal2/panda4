@@ -482,7 +482,9 @@ myDrawGLElement(int num, double length, int flag)
     glCallList(finger);
     glPopMatrix();
     */
+
     // draw little rod to show the endeffector position
+    #if 0
     glRotated((GLdouble)-90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
     glTranslated(0.0,0.0,length/2.);
     glScaled(0.02,0.01,length);
@@ -493,8 +495,12 @@ myDrawGLElement(int num, double length, int flag)
       glutSolidCube(1.0);
     else
       glutWireCube(1.0);
-
     break;
+#endif
+    glRotated((GLdouble)-90.,(GLdouble)1.,(GLdouble)0.,(GLdouble)0.);
+    glRotated((GLdouble)45.,(GLdouble)0.,(GLdouble)0.,(GLdouble)1.);    
+    glRotated((GLdouble)-18.,(GLdouble)0.,(GLdouble)1.,(GLdouble)0.);
+    length = 0.13; // the length of pointer
     glScaled(width/5.,width/5.,length);
     glColor4fv(gray);
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, gray);
@@ -503,7 +509,8 @@ myDrawGLElement(int num, double length, int flag)
     else
       glutWireCylinder(1.0,1.0,isphere,1);
     
-
+    break;
+    
   default:
 
     glScaled(width/2.,width/2.,length);
