@@ -219,8 +219,10 @@ setDefaultEndeffector(void) {
 #else
     endeff[i].x[_Z_]  = FL+FINGER_OFF+FINGER_LENGTH;
 #endif
-    endeff[i].x[_X_]  = 0.0;
-    endeff[i].x[_Z_]  = FL+0.0125; // pointer    
+    endeff[i].x[_X_]  = -0.014; // pointer
+    endeff[i].x[_Y_]  = -0.014; // pointer    
+    endeff[i].x[_Z_]  = FL+0.125; // pointer
+    
     
     endeff[i].a[_A_]  = 0.0;
     endeff[i].a[_B_]  = 0.0;
